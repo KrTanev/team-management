@@ -7,11 +7,11 @@ export const userKeys = {
   userDetails: (userId: number) => [userKeys.allUsers, `userDetails-${userId}`],
 };
 
-export const useGetUserAlbum = (userId: number) => {
+export const useGetAllUsers = () => {
   return useQuery<User[]>({
     queryKey: [userKeys.allUsers],
     queryFn: async () => {
-      const { data } = await axiosClient.get(`/albums?userId=${userId}`);
+      const { data } = await axiosClient.get(`/users`);
 
       return data;
     },
