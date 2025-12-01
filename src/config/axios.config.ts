@@ -1,6 +1,7 @@
 import axios from "axios";
+import { envConfig } from "./env.config";
 
 export const axiosClient = axios.create({
-  baseURL: "https://jsonplaceholder.typicode.com",
+  baseURL: envConfig.apiUrl,
   timeout: 1000 * 20,
 });
