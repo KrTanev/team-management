@@ -13,6 +13,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@mui/x-data-grid": "^8.20.0",
     "@tanstack/react-query": "^5.90.11",
@@ -21,6 +22,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.67.0",
+    "react-router-dom": "^7.9.6",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

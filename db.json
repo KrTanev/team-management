@@ -1,0 +1,120 @@
+{
+  "teams": [
+    {
+      "id": 1,
+      "name": "Team Marvin",
+      "users": [1, 2],
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Team Quark",
+      "users": [],
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+
+  "users": [
+    {
+      "id": 1,
+      "displayName": "Alice Johnson",
+      "email": "alice@example.com",
+      "firstName": "Alice",
+      "lastName": "Johnson",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "displayName": "B. Lee",
+      "email": "bob@example.com",
+      "firstName": "Bob",
+      "lastName": "Lee",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "displayName": "Charlie",
+      "email": "charlie@example.com",
+      "firstName": "Charlie",
+      "lastName": "Chen",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+
+  "projects": [
+    {
+      "id": 1,
+      "name": "Project Atlas",
+      "description": "Internal analytics platform",
+      "status": "active",
+      "adminIds": [1],
+      "memberIds": [2, 3],
+      "teamIds": [],
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Mobile Banking App",
+      "description": "Banking app MVP",
+      "status": "paused",
+      "adminIds": [2],
+      "memberIds": [1, 3],
+      "teamIds": [1],
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Web Banking App",
+      "description": "Banking app MVP for WEB",
+      "status": "completed",
+      "adminIds": [2],
+      "memberIds": [],
+      "teamIds": [],
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Create initial wireframes",
+      "description": "Basic screens for dashboard",
+      "status": "todo",
+      "priority": "low",
+      "projectId": 1,
+      "assignedUserId": 2,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "title": "Implement login page",
+      "description": "Basic email/password form",
+      "status": "in-progress",
+      "priority": "high",
+      "projectId": 1,
+      "assignedUserId": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "title": "API Integration",
+      "description": "Connect axios to json-server",
+      "status": "todo",
+      "priority": "medium",
+      "projectId": 2,
+      "assignedUserId": 3,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ]
+}
