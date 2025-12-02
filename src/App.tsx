@@ -1,4 +1,3 @@
-import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { routes } from "./pages/routes";
 import { ThemeProvider } from "@emotion/react";

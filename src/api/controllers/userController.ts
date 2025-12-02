@@ -1,5 +1,5 @@
-import { axiosClient } from "../config/axios.config";
-import type { User } from "./userTypes";
+import { axiosClient } from "../../config/axios.config";
+import type { User } from "../types/userTypes";
 import { useQuery } from "@tanstack/react-query";
 
 export const userKeys = {
@@ -7,11 +7,11 @@ export const userKeys = {
   userDetails: (userId: number) => [userKeys.allUsers, `userDetails-${userId}`],
 };
 
-export const useGetUserAlbum = (userId: number) => {
+export const useGetAllUser = () => {
   return useQuery<User[]>({
     queryKey: [userKeys.allUsers],
     queryFn: async () => {
-      const { data } = await axiosClient.get(`/albums?userId=${userId}`);
+      const { data } = await axiosClient.get('/users')
 
       return data;
     },
