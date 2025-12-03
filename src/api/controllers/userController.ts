@@ -7,7 +7,7 @@ export const userKeys = {
   userDetails: (userId: number) => [userKeys.allUsers, `userDetails-${userId}`],
 };
 
-export const useGetAllUser = () => {
+export const useGetAllUsers = () => {
   return useQuery<User[]>({
     queryKey: [userKeys.allUsers],
     queryFn: async () => {
@@ -17,3 +17,13 @@ export const useGetAllUser = () => {
     },
   });
 };
+
+export const useGetUser = (userId: number | undefined) =>{
+  return useQuery<User>({
+    queryKey: userId ? userKeys.userDetails(userId) : [userKeys.allUsers, "userDetails-undefined"],
+    queryFn: async () => {
+      const {data } = await axiosClient.get(`/users${userId}`);
+      return data;
+    }
+  })
+}
