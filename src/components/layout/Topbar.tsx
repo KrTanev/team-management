@@ -1,5 +1,4 @@
 import { AppBar, Button, Toolbar, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/hooks/useAuth";
 
 type TopbarProps = {
@@ -7,13 +6,11 @@ type TopbarProps = {
 };
 
 export const Topbar = ({ title = "Team Management" }: TopbarProps) => {
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const displayName = user?.displayName ?? "";
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
   };
 
   return (
@@ -25,10 +22,9 @@ export const Topbar = ({ title = "Team Management" }: TopbarProps) => {
         <Typography sx={{ flexGrow: 1 }} variant="h6" noWrap component="div">
           {title}
         </Typography>
-        <Typography
-          variant="body1"
-          sx={{ mr: 2 }}
-        >{`Welcome, ${displayName}`}</Typography>
+        <Typography variant="body1" sx={{ mr: 2 }}>
+          {displayName ? `Welcome, ${displayName}` : "Welcome"}
+        </Typography>
         <Button color="inherit" onClick={handleLogout}>
           Logout
         </Button>

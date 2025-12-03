@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const userKeys = {
   allUsers: "allUsers",
-  userDetails: (userId: number) => [userKeys.allUsers, `userDetails-${userId}`],
+  userDetails: (userId?: number) => [userKeys.allUsers, `userDetails-${userId}`],
 };
 
 export const useGetAllUsers = () => {
@@ -20,9 +20,9 @@ export const useGetAllUsers = () => {
 
 export const useGetUser = (userId: number | undefined) =>{
   return useQuery<User>({
-    queryKey: userId ? userKeys.userDetails(userId) : [userKeys.allUsers, "userDetails-undefined"],
+    queryKey: userKeys.userDetails(userId),
     queryFn: async () => {
-      const {data } = await axiosClient.get(`/users${userId}`);
+      const {data } = await axiosClient.get(`/users?id=${userId}`);
       return data;
     }
   })
