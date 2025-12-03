@@ -10,6 +10,10 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useCreateUser } from "../api/controllers/userController";
+import type { User } from "../api/types/userTypes";
+import { useAuth } from "../utils/hooks/useAuth";
+import { useRedirectIfLogged } from "../utils/hooks/useRedirectIfLogged";
 
 export const RegisterPage = () => {
   const [firstName, setFirstName] = useState("");
@@ -17,8 +21,8 @@ export const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [secret, setSecret] = useState("");
   const [confirmSecret, setConfirmSecret] = useState("");
-
-  const handleRegister = async () => {};
+  const { mutateAsync } = useCreateUser();
+  const { login } = useAuth();
 
   const validateFirstName = () => {
     const trimmed = firstName.trim();
@@ -85,6 +89,21 @@ export const RegisterPage = () => {
     isEmailValid &&
     !passwordErrorMessage &&
     !isConfirmPasswordInvalid;
+
+  const handleRegister = () => {
+    mutateAsync({
+      firstName: firstName,
+      lastName: lastName,
+      displayName: `${firstName} ${lastName}`,
+      email: email,
+      secret: secret,
+      createdAt: new Date().toLocaleDateString(),
+      updatedAt: new Date().toLocaleDateString(),
+    }).then((newUser) => {
+      login(newUser as unknown as User);
+    });
+  };
+  useRedirectIfLogged();
 
   return (
     <>

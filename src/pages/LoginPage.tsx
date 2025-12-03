@@ -6,10 +6,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../utils/hooks/useAuth";
 import { useGetAllUsers } from "../api/controllers/userController";
+import { useRedirectIfLogged } from "../utils/hooks/useRedirectIfLogged";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -22,12 +23,7 @@ export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      navigate("/");
-    }
-  }, [navigate]);
+  useRedirectIfLogged();
 
   const handleLogin = async () => {
     if (isSubmitting) {

@@ -1,24 +1,26 @@
 {
   "teams": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Team Marvin",
-      "users": [1, 2],
+      "users": [
+        1,
+        2
+      ],
       "createdAt": "2025-01-10T10:00:00Z",
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Team Quark",
       "users": [],
       "createdAt": "2025-01-10T10:00:00Z",
       "updatedAt": "2025-01-10T10:00:00Z"
     }
   ],
-
   "users": [
     {
-      "id": 1,
+      "id": "1",
       "displayName": "Alice Johnson",
       "email": "alice@example.com",
       "secret": "alice123456",
@@ -28,7 +30,7 @@
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "displayName": "B. Lee",
       "email": "bob@example.com",
       "secret": "bob123456",
@@ -38,7 +40,7 @@
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 3,
+      "id": "3",
       "displayName": "Charlie",
       "email": "charlie@example.com",
       "secret": "charlie123456",
@@ -46,48 +48,70 @@
       "lastName": "Chen",
       "createdAt": "2025-01-10T10:00:00Z",
       "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": "5a85",
+      "firstName": "Qwer",
+      "lastName": "Qwer",
+      "displayName": "Qwer Qwer",
+      "email": "admin@gmail.com",
+      "secret": "qwerqwer1",
+      "createdAt": "12/3/2025",
+      "updatedAt": "12/3/2025"
     }
   ],
-
   "projects": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Project Atlas",
       "description": "Internal analytics platform",
       "status": "active",
-      "adminIds": [1],
-      "memberIds": [2, 3],
+      "adminIds": [
+        1
+      ],
+      "memberIds": [
+        2,
+        3
+      ],
       "teamIds": [],
       "createdAt": "2025-01-10T10:00:00Z",
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Mobile Banking App",
       "description": "Banking app MVP",
       "status": "paused",
-      "adminIds": [2],
-      "memberIds": [1, 3],
-      "teamIds": [1],
+      "adminIds": [
+        2
+      ],
+      "memberIds": [
+        1,
+        3
+      ],
+      "teamIds": [
+        1
+      ],
       "createdAt": "2025-01-10T10:00:00Z",
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "Web Banking App",
       "description": "Banking app MVP for WEB",
       "status": "completed",
-      "adminIds": [2],
+      "adminIds": [
+        2
+      ],
       "memberIds": [],
       "teamIds": [],
       "createdAt": "2025-01-10T10:00:00Z",
       "updatedAt": "2025-01-10T10:00:00Z"
     }
   ],
-
   "tasks": [
     {
-      "id": 1,
+      "id": "1",
       "title": "Create initial wireframes",
       "description": "Basic screens for dashboard",
       "status": "todo",
@@ -98,7 +122,7 @@
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "title": "Implement login page",
       "description": "Basic email/password form",
       "status": "in-progress",
@@ -109,7 +133,7 @@
       "updatedAt": "2025-01-10T10:00:00Z"
     },
     {
-      "id": 3,
+      "id": "3",
       "title": "API Integration",
       "description": "Connect axios to json-server",
       "status": "todo",
