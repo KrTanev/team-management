@@ -4,20 +4,24 @@ import { Layout } from "../components/layout/Layout";
 import ErrorPage from "./ErrorPage";
 import { TeamsPage } from "./TeamsPage";
 import { RegisterPage } from "./RegisterPage";
-import { AuthLayout } from "../components/layout/AuthLayout";
-import {LoginPage} from "./LoginPage";
+import { LoginPage } from "./LoginPage";
+import { ProtectedRoute } from "../utils/hooks/withAuth";
 
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {
         index: true,
         element: <LandingPage />,
       },
-      
+
       {
         path: "/teams",
         element: <TeamsPage />,
@@ -26,15 +30,15 @@ export const routes: RouteObject[] = [
   },
   {
     path: "/",
-    element: <Outlet/>,
+    element: <Outlet />,
     children: [
       {
         path: "/register",
-        element: <RegisterPage/>
+        element: <RegisterPage />,
       },
       {
         path: "/login",
-        element: <LoginPage/>,
+        element: <LoginPage />,
       },
     ],
   },
