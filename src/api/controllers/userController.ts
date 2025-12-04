@@ -23,7 +23,7 @@ export const useGetAllUsers = () => {
 };
 
 export const useGetUser = (userId: number | undefined) => {
-  return useQuery<User>({
+  return useQuery<User[]>({
     queryKey: userKeys.userDetails(userId),
     queryFn: async () => {
       const { data } = await axiosClient.get(`/users?id=${userId}`);
