@@ -1,15 +1,9 @@
-import { Box, Typography, CircularProgress, Alert } from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import { useGetAllTeams } from "../api/controllers/teamController";
-import {TeamCard} from "../components/TeamCard";
+import { TeamCard } from "../components/TeamCard";
 
 export const TeamsPage = () => {
-  const {
-    data = [],
-    isLoading,
-    isError,
-    error,
-  } = useGetAllTeams();
-
+  const { data = [], isLoading, isError, error } = useGetAllTeams();
 
   if (isLoading) {
     return (
