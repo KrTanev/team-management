@@ -1,0 +1,1191 @@
+openapi: 3.1.0
+info:
+  title: Team Management API
+  version: 1.0.0
+  description: |
+    The contract both backends (`backend-python/`, `backend-node/`) implement and
+    the frontend consumes. BetterDev's hidden checks call the running server over
+    HTTP, so **paths, status codes and response shapes here are the spec** — the
+    internals are yours.
+
+    Conventions
+    - JSON everywhere, camelCase fields, integer ids, ISO-8601 UTC timestamps.
+    - Auth: `Authorization: Bearer <token>` from `POST /auth/login`. Every route
+      except `/health`, `/auth/login` and `/__test__/*` requires it (401 otherwise).
+    - Errors always use the `Error` envelope below.
+    - List endpoints are paginated: `limit` (default 20, max 100) and `offset`
+      (default 0), response `{items, total, limit, offset}`. The activity feed is
+      the exception — it uses cursor pagination.
+    - Roles: every user has a global `role` (`admin` | `member`). Teams have
+      `lead` | `member`; projects have `admin` | `member`.
+    - Visibility: a project (and its tasks, activity and numbers) is visible to its
+      members and to global admins. For anyone else it does not exist — `404`, never
+      `403`. `403` is for callers who can see the resource but may not change it.
+    - Every response carries `X-Request-ID` (the incoming one when the client sent
+      it, otherwise a generated one). Built in be-observability.
+
+    Status markers: `x-status: shipped` = implemented in the starter (possibly
+    with deliberate flaws); `x-status: build` = you implement it during a task.
+servers:
+  - url: http://localhost:8000
+security:
+  - bearer: []
+
+paths:
+  /health:
+    get:
+      x-status: shipped
+      security: []
+      summary: Liveness probe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { const: ok }
+
+  /__test__/reset:
+    post:
+      x-status: shipped
+      security: []
+      summary: Reset the database to a seed (only when BD_TEST_MODE=1; 404 otherwise)
+      description: |
+        Drops all data and loads `contracts/seed.json` (`size=small`) or the
+        generated large dataset (`size=large`). Used by the hidden checks — do not
+        remove it. When you add new tables, extend the seeder so they load too.
+      parameters:
+        - in: query
+          name: size
+          schema: { enum: [small, large], default: small }
+      responses:
+        '204': { description: Reset done }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /__test__/error:
+    get:
+      x-status: build
+      security: []
+      summary: Throw an unhandled error (only when BD_TEST_MODE=1; 404 otherwise)
+      description: |
+        A test hook for be-errors: the handler throws a plain, unhandled
+        `Error("boom")` / `RuntimeError("boom")` — don't catch it in the route.
+        The response shows what your error handler does with an unexpected
+        exception: a `500` envelope with code `internal_error` and a generic
+        message (no "boom", no stack trace, no SQL).
+      responses:
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /metrics:
+    get:
+      x-status: build
+      security: []
+      summary: Prometheus metrics (no auth) — built in be-observability
+      description: |
+        Prometheus text exposition format. Must include at least
+        - `http_requests_total{method,route,status}` — a counter per method, route
+          template (e.g. `/teams/{teamId}`) and status code
+        - `http_request_duration_seconds` — a histogram (`_bucket{le=...}`, `_sum`,
+          `_count`) labelled at least by `method` and `route`
+      responses:
+        '200':
+          description: Metrics
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /auth/login:
+    post:
+      x-status: shipped
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, user]
+                properties:
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '401':
+          description: |
+            Wrong email or password. The message must be identical for an unknown
+            email and a wrong password.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429':
+          description: |
+            After 5 failed logins for the same email from the same client within
+            the window (`LOGIN_RATE_LIMIT_WINDOW_SECONDS`, default 60), every
+            further attempt — even with the right password — is refused until the
+            oldest failure leaves the window. Sends `Retry-After` (whole seconds).
+          headers:
+            Retry-After:
+              schema: { type: integer, minimum: 1 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/logout:
+    post:
+      x-status: shipped
+      summary: Invalidate the current token (it must return 401 afterwards)
+      responses:
+        '204': { description: Logged out }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      x-status: shipped
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /users:
+    get:
+      x-status: shipped
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - in: query
+          name: search
+          description: |
+            Case-insensitive substring match on email, first name, last name,
+            "first last" or display name. Filtered and paginated in the database —
+            `total` counts every match, `items` holds at most `limit` of them.
+          schema: { type: string }
+        - in: query
+          name: role
+          schema: { $ref: '#/components/schemas/UserRole' }
+      responses:
+        '200':
+          description: Page of users ordered by id
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/User' }
+    post:
+      x-status: shipped
+      summary: Create a user (global admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      x-status: shipped
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-status: shipped
+      summary: Update a user (self, or global admin). Only admins may change `role`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      x-status: shipped
+      summary: Delete a user (global admin only)
+      responses:
+        '204': { description: Deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /teams:
+    get:
+      x-status: shipped
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Page of teams (with members) ordered by id
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Team' }
+    post:
+      x-status: shipped
+      summary: Create a team (global admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TeamCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Team' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /teams/{teamId}:
+    parameters:
+      - $ref: '#/components/parameters/TeamId'
+    get:
+      x-status: shipped
+      responses:
+        '200':
+          description: Team
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Team' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-status: shipped
+      summary: Update a team (global admin or team lead)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TeamUpdate' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Team' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      x-status: shipped
+      summary: Delete a team (global admin only)
+      responses:
+        '204': { description: Deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /teams/{teamId}/members:
+    parameters:
+      - $ref: '#/components/parameters/TeamId'
+    post:
+      x-status: shipped
+      summary: Add a member (global admin or team lead)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: integer }
+                role: { $ref: '#/components/schemas/TeamRole' }
+      responses:
+        '201':
+          description: Added — returns the updated team
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Team' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: User is already a member
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /teams/{teamId}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/UserId'
+    delete:
+      x-status: shipped
+      summary: Remove a member (global admin or team lead)
+      responses:
+        '204': { description: Removed }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects:
+    get:
+      x-status: build
+      summary: Projects visible to the caller (member of, or all for global admins)
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - in: query
+          name: status
+          schema: { $ref: '#/components/schemas/ProjectStatus' }
+        - in: query
+          name: teamId
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Page of projects ordered by id (filters combine with AND)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Project' }
+    post:
+      x-status: build
+      summary: Create a project — the caller becomes its only member, with role `admin`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '422':
+          description: Invalid body, or a `teamIds` entry is not an existing team
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      x-status: build
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '404':
+          description: Not found — also returned when the caller cannot see the project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    patch:
+      x-status: build
+      summary: Update (project admin or global admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectUpdate' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      x-status: build
+      summary: Delete with all its tasks, members and team links (project admin or global admin)
+      responses:
+        '204': { description: Deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      x-status: build
+      summary: Add a member (project admin or global admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: integer }
+                role: { $ref: '#/components/schemas/ProjectRole' }
+      responses:
+        '201':
+          description: Added — returns the updated project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Project not visible, or no user with that id
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: The user is already a member of the project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /projects/{projectId}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/UserId'
+    delete:
+      x-status: build
+      summary: Remove a member (project admin or global admin). Removing the last project admin is a 409.
+      responses:
+        '204': { description: Removed }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Project not visible, or the user is not a member of it
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      x-status: build
+      summary: Tasks of a project — filters (`status`, `priority`, `assigneeId`) combine with AND
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - in: query
+          name: status
+          schema: { $ref: '#/components/schemas/TaskStatus' }
+        - in: query
+          name: priority
+          schema: { $ref: '#/components/schemas/TaskPriority' }
+        - in: query
+          name: assigneeId
+          schema: { type: integer }
+        - in: query
+          name: sort
+          description: |
+            Field to sort by; prefix with `-` for descending. Default `id`.
+            - `priority` sorts by rank, `low` < `medium` < `high` < `urgent` (not alphabetically).
+            - `dueDate`: tasks without a due date come last in both directions.
+            - Ties are broken by `id` ascending.
+            Any other value is a `422`.
+          schema:
+            enum: [id, -id, createdAt, -createdAt, dueDate, -dueDate, priority, -priority]
+      responses:
+        '200':
+          description: Page of tasks
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Task' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    post:
+      x-status: build
+      summary: Create a task (any project member)
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          description: |
+            Same key + same body within 24h returns the original 201 response
+            (same status, same body, same task id) without creating a duplicate.
+            Same key + different body is a 409. Keys are scoped to the calling
+            user: two users may use the same key independently.
+          schema: { type: string, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422':
+          description: Invalid body, or the assignee is not a member of the project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      x-status: build
+      responses:
+        '200':
+          description: Task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-status: build
+      summary: Update a task (any project member). Optimistic concurrency via `version`.
+      description: |
+        `version` is required (`422` without it). The update applies only if it
+        equals the stored version — check and write atomically, so that of N
+        concurrent updates sent with the same `version` exactly one succeeds.
+        A new `assigneeId` must be a project member (`422` otherwise).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskUpdate' }
+      responses:
+        '200':
+          description: Updated — `version` is incremented
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: '`version` does not match the stored task (someone else updated it)'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: Invalid body, missing `version`, or the assignee is not a member of the project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      x-status: build
+      summary: Delete (project admin or global admin)
+      responses:
+        '204': { description: Deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /me/tasks:
+    get:
+      x-status: build
+      summary: Tasks assigned to the caller across projects, not done, ordered by dueDate (nulls last, ties by id)
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Page of tasks
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Task' }
+
+  /activity:
+    get:
+      x-status: build
+      summary: Activity feed, newest first, limited to projects the caller can see (admins see all)
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - in: query
+          name: cursor
+          description: |
+            Opaque value from a previous `nextCursor` (an invalid one is a `422`).
+            Rows created after the first page was read never show up on later
+            pages, and no row is skipped or repeated.
+          schema: { type: string }
+        - in: query
+          name: projectId
+          schema: { type: integer }
+        - in: query
+          name: actorId
+          schema: { type: integer }
+        - in: query
+          name: entityType
+          schema: { enum: [user, team, project, task] }
+      responses:
+        '200':
+          description: Page of activity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Activity' }
+                  nextCursor:
+                    description: '`null` on the last page'
+                    type: [string, 'null']
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /analytics/summary:
+    get:
+      x-status: build
+      summary: Dashboard numbers across projects the caller can see
+      description: |
+        Sends an `ETag`. A request whose `If-None-Match` matches the current ETag
+        gets `304` with no body. Numbers are never stale: a change to a task, a
+        project or its members shows up in the next response.
+      parameters:
+        - in: header
+          name: If-None-Match
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Summary
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalyticsSummary' }
+        '304':
+          description: Not modified (empty body)
+
+  /analytics/throughput:
+    get:
+      x-status: build
+      summary: Tasks created and completed per UTC day, oldest first, one entry per day (zeros included)
+      description: |
+        `days` entries ending today (UTC). `created` counts visible tasks created
+        that day; `completed` counts visible tasks that became `done` that day —
+        created as done or changed to done — and are still done.
+      parameters:
+        - in: query
+          name: days
+          schema: { type: integer, minimum: 1, maximum: 90, default: 14 }
+      responses:
+        '200':
+          description: Series
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [date, created, completed]
+                  properties:
+                    date: { type: string, format: date }
+                    created: { type: integer }
+                    completed: { type: integer }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /exports/tasks:
+    post:
+      x-status: build
+      summary: Start a CSV export of a project's tasks as a background job
+      parameters:
+        - in: query
+          name: projectId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: simulateFailure
+          required: false
+          description: |
+            Test hook, honoured only when BD_TEST_MODE=1: the job is accepted as
+            usual, then throws partway through, and must end up `failed`.
+          schema: { type: boolean, default: false }
+      description: |
+        Returns immediately; a background worker builds the CSV. The job goes
+        `pending` → `running` → `done` (or `failed` if it throws — never stuck in
+        `running`). With `EXPORT_JOB_DELAY_SECONDS` set (a test hook, default 0)
+        the worker waits that long after marking the job `running`, so the check
+        can observe it.
+      responses:
+        '202':
+          description: Accepted — poll the job
+          headers:
+            Location:
+              description: /exports/{exportId}
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportJob' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /exports/{exportId}:
+    parameters:
+      - in: path
+        name: exportId
+        required: true
+        schema: { type: string }
+    get:
+      x-status: build
+      summary: Job status (only the user who started it may read it)
+      responses:
+        '200':
+          description: Job
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportJob' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /exports/{exportId}/download:
+    parameters:
+      - in: path
+        name: exportId
+        required: true
+        schema: { type: string }
+    get:
+      x-status: build
+      summary: The finished CSV (409 while the job is not done, and for failed jobs)
+      responses:
+        '200':
+          description: |
+            RFC 4180 CSV (`text/csv`): header row `id,title,status,priority,assignee,dueDate`,
+            then one row per task of the project ordered by id. `assignee` is the
+            assignee's `displayName`, `dueDate` is `YYYY-MM-DD`; both are empty when null.
+            Fields containing commas, quotes or newlines are quoted.
+          content:
+            text/csv:
+              schema: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+webhooks:
+  taskStatusChanged:
+    post:
+      x-status: build
+      summary: Sent to WEBHOOK_URL whenever a task's status changes (be-webhooks)
+      description: |
+        Only when `WEBHOOK_URL` is set. Sent in the background — the API response
+        never waits for it. Headers:
+        - `Content-Type: application/json`
+        - `X-Signature: sha256=<hex>` — HMAC-SHA256 of the raw request body, keyed with `WEBHOOK_SECRET`
+        - `X-Delivery-Id` — unique per event, identical on every retry of that event
+
+        A `5xx` answer (or no answer) is retried up to 3 more times with
+        exponential backoff (e.g. 0.5 s, 1 s, 2 s — first retry within 2 s, all
+        retries within 15 s). A `2xx`, `3xx` or `4xx` answer is final.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event, taskId, projectId, from, to, occurredAt]
+              properties:
+                event: { const: task.status_changed }
+                taskId: { type: integer }
+                projectId: { type: integer }
+                from: { $ref: '#/components/schemas/TaskStatus' }
+                to: { $ref: '#/components/schemas/TaskStatus' }
+                occurredAt: { type: string, format: date-time }
+      responses:
+        '200': { description: Received }
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+
+  parameters:
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Offset:
+      in: query
+      name: offset
+      schema: { type: integer, minimum: 0, default: 0 }
+    UserId:
+      in: path
+      name: userId
+      required: true
+      schema: { type: integer }
+    TeamId:
+      in: path
+      name: teamId
+      required: true
+      schema: { type: integer }
+    ProjectId:
+      in: path
+      name: projectId
+      required: true
+      schema: { type: integer }
+    TaskId:
+      in: path
+      name: taskId
+      required: true
+      schema: { type: integer }
+
+  responses:
+    Unauthorized:
+      description: Missing, invalid or expired token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but not allowed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Conflicts with existing state
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Invalid input — `details` lists the fields
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Too many requests — sends a `Retry-After` header (seconds)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              enum: [unauthorized, forbidden, not_found, conflict, validation_error, rate_limited, internal_error]
+            message: { type: string }
+            details:
+              description: For validation_error — one entry per invalid field
+              type: array
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    Page:
+      type: object
+      required: [items, total, limit, offset]
+      properties:
+        items: { type: array }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+
+    UserRole: { enum: [admin, member] }
+    TeamRole: { enum: [lead, member], default: member }
+    ProjectRole: { enum: [admin, member], default: member }
+    ProjectStatus: { enum: [planned, active, on_hold, done] }
+    TaskStatus: { enum: [todo, in_progress, review, done] }
+    TaskPriority: { enum: [low, medium, high, urgent] }
+
+    User:
+      type: object
+      required: [id, email, firstName, lastName, displayName, role, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        firstName: { type: string }
+        lastName: { type: string }
+        displayName: { type: string }
+        role: { $ref: '#/components/schemas/UserRole' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      description: Never includes the password or its hash.
+
+    UserCreate:
+      type: object
+      required: [email, firstName, lastName, password]
+      properties:
+        email: { type: string, format: email }
+        firstName: { type: string, minLength: 1, maxLength: 80 }
+        lastName: { type: string, minLength: 1, maxLength: 80 }
+        displayName: { type: string, maxLength: 160, description: 'Defaults to "firstName lastName"' }
+        password: { type: string, minLength: 8 }
+        role: { $ref: '#/components/schemas/UserRole' }
+
+    UserUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        firstName: { type: string, minLength: 1, maxLength: 80 }
+        lastName: { type: string, minLength: 1, maxLength: 80 }
+        displayName: { type: string, minLength: 1, maxLength: 160 }
+        role: { $ref: '#/components/schemas/UserRole' }
+
+    TeamMember:
+      type: object
+      required: [userId, displayName, role]
+      properties:
+        userId: { type: integer }
+        displayName: { type: string }
+        role: { $ref: '#/components/schemas/TeamRole' }
+
+    Team:
+      type: object
+      required: [id, name, description, members, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        members:
+          type: array
+          description: Ordered by userId
+          items: { $ref: '#/components/schemas/TeamMember' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    TeamCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120, description: Unique (case-insensitive) }
+        description: { type: string, maxLength: 2000, default: '' }
+
+    TeamUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 2000 }
+
+    ProjectMember:
+      type: object
+      required: [userId, displayName, role]
+      properties:
+        userId: { type: integer }
+        displayName: { type: string }
+        role: { $ref: '#/components/schemas/ProjectRole' }
+
+    Project:
+      type: object
+      required: [id, name, description, status, teamIds, members, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        status: { $ref: '#/components/schemas/ProjectStatus' }
+        teamIds:
+          type: array
+          items: { type: integer }
+        members:
+          type: array
+          description: Ordered by userId
+          items: { $ref: '#/components/schemas/ProjectMember' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ProjectCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 5000, default: '' }
+        status: { $ref: '#/components/schemas/ProjectStatus', default: planned }
+        teamIds:
+          type: array
+          default: []
+          items: { type: integer }
+
+    ProjectUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 5000 }
+        status: { $ref: '#/components/schemas/ProjectStatus' }
+        teamIds:
+          type: array
+          items: { type: integer }
+
+    Task:
+      type: object
+      required: [id, projectId, title, description, status, priority, assigneeId, dueDate, version, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        projectId: { type: integer }
+        title: { type: string }
+        description: { type: string, description: Markdown source }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        priority: { $ref: '#/components/schemas/TaskPriority' }
+        assigneeId: { type: [integer, 'null'] }
+        dueDate: { type: [string, 'null'], format: date }
+        version: { type: integer, description: Starts at 1, +1 on every update }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    TaskCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 10000, default: '' }
+        status: { $ref: '#/components/schemas/TaskStatus', default: todo }
+        priority: { $ref: '#/components/schemas/TaskPriority', default: medium }
+        assigneeId: { type: [integer, 'null'], default: null }
+        dueDate: { type: [string, 'null'], format: date }
+
+    TaskUpdate:
+      type: object
+      required: [version]
+      properties:
+        version: { type: integer, description: The version you last read }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 10000 }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        priority: { $ref: '#/components/schemas/TaskPriority' }
+        assigneeId: { type: [integer, 'null'] }
+        dueDate: { type: [string, 'null'], format: date }
+
+    Activity:
+      type: object
+      required: [id, actorId, action, entityType, entityId, projectId, data, createdAt]
+      properties:
+        id: { type: integer }
+        actorId: { type: integer }
+        action:
+          description: |
+            `<entityType>.<verb>`. One row per successful operation, written in the
+            same transaction as the change:
+
+            | action | entityType / entityId | data |
+            |---|---|---|
+            | `project.created` | project | `{"name"}` |
+            | `project.updated` | project | `{"fields": [changed field names, sorted]}` |
+            | `project.deleted` | project | `{"name"}` |
+            | `project.member_added` | project | `{"userId", "role"}` |
+            | `project.member_removed` | project | `{"userId"}` |
+            | `task.created` | task | `{"title"}` |
+            | `task.updated` | task | `{"fields": [changed field names, sorted]}` |
+            | `task.status_changed` | task | `{"from", "to"}` — used instead of `task.updated` whenever the status changes |
+            | `task.deleted` | task | `{"title"}` |
+
+            `projectId` is the project the row belongs to; rows keep it after the
+            project is deleted (then only global admins see them).
+          type: string
+        entityType: { enum: [user, team, project, task] }
+        entityId: { type: integer }
+        projectId: { type: [integer, 'null'] }
+        data:
+          type: object
+          description: 'Action-specific payload, e.g. `{"from": "todo", "to": "done"}` for status changes'
+        createdAt: { type: string, format: date-time }
+
+    AnalyticsSummary:
+      type: object
+      required: [tasksByStatus, tasksByPriority, overdueTasks, projectsByStatus, topAssignees]
+      properties:
+        tasksByStatus:
+          type: object
+          description: Every TaskStatus key present, zero when empty
+          additionalProperties: { type: integer }
+        tasksByPriority:
+          type: object
+          description: Every TaskPriority key present, zero when empty
+          additionalProperties: { type: integer }
+        overdueTasks:
+          type: integer
+          description: dueDate before today (UTC) and status != done
+        projectsByStatus:
+          type: object
+          description: Every ProjectStatus key present, zero when empty
+          additionalProperties: { type: integer }
+        topAssignees:
+          type: array
+          description: |
+            Up to 5 users with at least one assigned (visible) task, most open (not
+            done) tasks first, ties by userId ascending
+          items:
+            type: object
+            required: [userId, displayName, open, done]
+            properties:
+              userId: { type: integer }
+              displayName: { type: string }
+              open: { type: integer }
+              done: { type: integer }
+
+    ExportJob:
+      type: object
+      required: [id, status, rowCount, createdAt, finishedAt]
+      properties:
+        id: { type: string }
+        status: { enum: [pending, running, done, failed] }
+        rowCount: { type: [integer, 'null'], description: Number of task rows in the CSV once `done`, else null }
+        createdAt: { type: string, format: date-time }
+        finishedAt: { type: [string, 'null'], format: date-time, description: Set when the job is `done` or `failed` }

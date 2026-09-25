@@ -1,0 +1,24 @@
+# Runs a BetterDev milestone check against this repo. Trigger it from the
+# Actions tab ("Run workflow") and pick the milestone, e.g. be-crud.
+#
+# The hidden acceptance tests are downloaded at run time by BetterDev's
+# reusable workflow and the result is posted back to your BetterDev account
+# (matched through the linkCode in betterdev.json). Backend checks run against
+# the backend named in betterdev.json. Don't edit the `uses:` line — results
+# are only accepted from that workflow.
+name: BetterDev check
+on:
+  workflow_dispatch:
+    inputs:
+      milestone:
+        description: Milestone id (see betterdev/tasks/)
+        required: true
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  check:
+    uses: betterdev-dev/betterdev-checks/.github/workflows/repo-check.yml@v1
+    with:
+      track: ${{ startsWith(inputs.milestone, 'fe-') && 'frontend' || 'backend' }}
+      milestone: ${{ inputs.milestone }}

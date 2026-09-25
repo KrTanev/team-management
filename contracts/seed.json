@@ -1,0 +1,369 @@
+{
+  "password": "password123",
+  "users": [
+    {
+      "id": 1,
+      "email": "alice@example.com",
+      "firstName": "Alice",
+      "lastName": "Johnson",
+      "displayName": "Alice Johnson",
+      "role": "admin",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "email": "bob@example.com",
+      "firstName": "Bob",
+      "lastName": "Smith",
+      "displayName": "Bob Smith",
+      "role": "member",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "email": "carol@example.com",
+      "firstName": "Carol",
+      "lastName": "Nguyen",
+      "displayName": "Carol Nguyen",
+      "role": "member",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "email": "dave@example.com",
+      "firstName": "Dave",
+      "lastName": "Petrov",
+      "displayName": "Dave Petrov",
+      "role": "member",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "email": "erin@example.com",
+      "firstName": "Erin",
+      "lastName": "Garcia",
+      "displayName": "Erin Garcia",
+      "role": "member",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 6,
+      "email": "frank@example.com",
+      "firstName": "Frank",
+      "lastName": "Müller",
+      "displayName": "Frank Müller",
+      "role": "member",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "Team Marvin",
+      "description": "Platform and infrastructure",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Team Nova",
+      "description": "Customer-facing product",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Team Orbit",
+      "description": "Data and analytics",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+  "teamMembers": [
+    {
+      "teamId": 1,
+      "userId": 1,
+      "role": "lead"
+    },
+    {
+      "teamId": 1,
+      "userId": 2,
+      "role": "member"
+    },
+    {
+      "teamId": 1,
+      "userId": 4,
+      "role": "member"
+    },
+    {
+      "teamId": 2,
+      "userId": 3,
+      "role": "lead"
+    },
+    {
+      "teamId": 2,
+      "userId": 2,
+      "role": "member"
+    },
+    {
+      "teamId": 2,
+      "userId": 5,
+      "role": "member"
+    },
+    {
+      "teamId": 3,
+      "userId": 6,
+      "role": "lead"
+    },
+    {
+      "teamId": 3,
+      "userId": 4,
+      "role": "member"
+    }
+  ],
+  "projects": [
+    {
+      "id": 1,
+      "name": "Project Atlas",
+      "description": "Internal analytics platform",
+      "status": "active",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Project Beacon",
+      "description": "Customer notifications revamp",
+      "status": "planned",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Project Comet",
+      "description": "Legacy billing migration",
+      "status": "on_hold",
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ],
+  "projectTeams": [
+    {
+      "projectId": 1,
+      "teamId": 3
+    },
+    {
+      "projectId": 1,
+      "teamId": 1
+    },
+    {
+      "projectId": 2,
+      "teamId": 2
+    },
+    {
+      "projectId": 3,
+      "teamId": 1
+    }
+  ],
+  "projectMembers": [
+    {
+      "projectId": 1,
+      "userId": 1,
+      "role": "admin"
+    },
+    {
+      "projectId": 1,
+      "userId": 2,
+      "role": "member"
+    },
+    {
+      "projectId": 1,
+      "userId": 6,
+      "role": "member"
+    },
+    {
+      "projectId": 2,
+      "userId": 3,
+      "role": "admin"
+    },
+    {
+      "projectId": 2,
+      "userId": 5,
+      "role": "member"
+    },
+    {
+      "projectId": 3,
+      "userId": 4,
+      "role": "admin"
+    },
+    {
+      "projectId": 3,
+      "userId": 2,
+      "role": "member"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "projectId": 1,
+      "title": "Create initial wireframes",
+      "description": "Basic screens for the **dashboard**",
+      "status": "done",
+      "priority": "low",
+      "assigneeId": 2,
+      "dueDate": "2025-01-20",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "projectId": 1,
+      "title": "Set up ingestion pipeline",
+      "description": "Kafka → warehouse, see `docs/ingest.md`",
+      "status": "in_progress",
+      "priority": "high",
+      "assigneeId": 6,
+      "dueDate": "2025-02-01",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "projectId": 1,
+      "title": "Define KPI list",
+      "description": "Agree on the first 10 KPIs with stakeholders",
+      "status": "review",
+      "priority": "medium",
+      "assigneeId": 1,
+      "dueDate": null,
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "projectId": 1,
+      "title": "Row-level access for reports",
+      "description": "Only project members may see project data",
+      "status": "todo",
+      "priority": "urgent",
+      "assigneeId": 2,
+      "dueDate": "2025-02-10",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "projectId": 1,
+      "title": "Chart component library",
+      "description": "Evaluate options and pick one",
+      "status": "todo",
+      "priority": "medium",
+      "assigneeId": null,
+      "dueDate": null,
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 6,
+      "projectId": 2,
+      "title": "Notification channels audit",
+      "description": "List every channel we send through today",
+      "status": "todo",
+      "priority": "medium",
+      "assigneeId": 5,
+      "dueDate": "2025-02-15",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 7,
+      "projectId": 2,
+      "title": "Template engine spike",
+      "description": "Timebox: 2 days",
+      "status": "todo",
+      "priority": "low",
+      "assigneeId": 3,
+      "dueDate": null,
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 8,
+      "projectId": 2,
+      "title": "Opt-out handling",
+      "description": "Respect user preferences across channels",
+      "status": "todo",
+      "priority": "high",
+      "assigneeId": null,
+      "dueDate": "2025-03-01",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 9,
+      "projectId": 3,
+      "title": "Export legacy invoices",
+      "description": "One-off export to CSV",
+      "status": "done",
+      "priority": "medium",
+      "assigneeId": 4,
+      "dueDate": "2025-01-15",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 10,
+      "projectId": 3,
+      "title": "Map billing entities",
+      "description": "Old schema → new schema mapping doc",
+      "status": "in_progress",
+      "priority": "high",
+      "assigneeId": 2,
+      "dueDate": "2025-01-31",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 11,
+      "projectId": 3,
+      "title": "Reconciliation script",
+      "description": "Compare totals between systems",
+      "status": "todo",
+      "priority": "urgent",
+      "assigneeId": 4,
+      "dueDate": "2025-02-05",
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 12,
+      "projectId": 3,
+      "title": "Decommission plan",
+      "description": "Steps and rollback for switching off legacy billing",
+      "status": "todo",
+      "priority": "low",
+      "assigneeId": null,
+      "dueDate": null,
+      "version": 1,
+      "createdAt": "2025-01-10T10:00:00Z",
+      "updatedAt": "2025-01-10T10:00:00Z"
+    }
+  ]
+}
