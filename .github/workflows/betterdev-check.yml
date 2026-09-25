@@ -18,7 +18,7 @@ permissions:
   id-token: write
 jobs:
   check:
-    uses: betterdev-dev/betterdev-checks/.github/workflows/repo-check.yml@v1
+    uses: KrTanev/betterdev-checks/.github/workflows/repo-check.yml@v1
     with:
       track: ${{ startsWith(inputs.milestone, 'fe-') && 'frontend' || 'backend' }}
       milestone: ${{ inputs.milestone }}
