@@ -2,7 +2,8 @@ import hashlib
 import hmac
 import secrets
 
-from fastapi import Depends, Header
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -37,10 +38,14 @@ def issue_token(db: Session, user: User) -> str:
     return token
 
 
-def bearer_token(authorization: str | None = Header(default=None)) -> str:
-    if not authorization or not authorization.lower().startswith("bearer "):
+# Declared as a security scheme so Swagger UI (/docs) shows an "Authorize" button.
+_bearer = HTTPBearer(auto_error=False, description="Token from POST /auth/login")
+
+
+def bearer_token(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> str:
+    if creds is None or not creds.credentials:
         raise ApiError(401, "Missing bearer token")
-    return authorization[7:].strip()
+    return creds.credentials
 
 
 def current_user(token: str = Depends(bearer_token), db: Session = Depends(get_db)) -> User:

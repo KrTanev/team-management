@@ -55,13 +55,25 @@ Sign in as `alice@example.com` (admin) or `bob@example.com` (member), password
 
 | You're doing | Run |
 |---|---|
-| **Backend only** | Just your backend. Try it with curl, or FastAPI's `/docs`; `contracts/openapi.yaml` is the spec. The frontend isn't needed. |
+| **Backend only** | Just your backend. Explore it in Swagger at http://localhost:8000/docs (see *API docs* below) or with curl; `contracts/openapi.yaml` is the spec. The frontend isn't needed. |
 | **Frontend only** | `npm run dev:mock` in `frontend/`. The whole API from `contracts/openapi.yaml` — projects, tasks, activity, analytics, exports — is answered in the browser by `src/mocks/fakeApi.ts`, seeded from `contracts/seed.json`. No backend needed. Data resets when you reload. |
 | **Both** | Your backend + `npm run dev`. Frontend work that needs endpoints you haven't built yet? Switch to `npm run dev:mock` until you have. |
 
 The same mock API backs the frontend's component tests (`src/test/server.ts`),
 and the frontend checks run against an equivalent one — so a page that works in
 `dev:mock` works in the checks.
+
+## API docs (Swagger)
+
+Both backends serve Swagger UI at **http://localhost:8000/docs**:
+
+- **Node** shows the full contract (`contracts/openapi.yaml`, also at `/openapi.yaml`) —
+  every endpoint you'll build, including the ones that don't exist yet.
+- **Python** shows FastAPI's docs generated from your code (`/openapi.json`) — it grows
+  as you add routes. For the full contract, open `contracts/openapi.yaml` in an editor
+  or paste it into https://editor.swagger.io.
+
+Use **Authorize** with a token from `POST /auth/login` to try protected endpoints.
 
 ## Working on a task
 

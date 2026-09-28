@@ -42,3 +42,16 @@ describe("api", () => {
     expect(res.body.error.code).toBe("not_found");
   });
 });
+
+describe("docs", () => {
+  it("serves the contract and a Swagger UI page", async () => {
+    const spec = await request(app).get("/openapi.yaml");
+    expect(spec.status).toBe(200);
+    expect(spec.headers["content-type"]).toMatch(/yaml/);
+    expect(spec.text).toContain("openapi: 3.1.0");
+
+    const page = await request(app).get("/docs");
+    expect(page.status).toBe(200);
+    expect(page.text).toContain("SwaggerUIBundle");
+  });
+});

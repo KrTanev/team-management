@@ -34,7 +34,7 @@ Each task brief lists what its check looks for. The names it relies on:
 | `/projects/:id/tasks` | table named "Tasks"; comboboxes "Status" and "Priority" (option values = API values, `""` for all) whose values live in the URL (`?status=`, `?priority=`) |
 | `/projects/:id/settings` | heading "Settings"; project admins and global admins only — anyone else is redirected to `/projects/:id` |
 | `/projects/:id/tasks/:taskId` | heading = task title; region "Description" with the rendered Markdown |
-| `/activity` | heading "Activity log"; a `role="feed"` element whose `article` children are the entries (with `aria-posinset` / `aria-setsize`); comboboxes "Project" and "Entity type" whose values live in the URL (`?projectId=`, `?entityType=`) |
+| `/activity` | heading "Activity log"; a `role="feed"` element whose `article` children are the entries (with `aria-posinset` / `aria-setsize`), each showing its relative time in a `<time dateTime="{createdAt}">` (from fe-i18n); comboboxes "Project" and "Entity type" whose values live in the URL (`?projectId=`, `?entityType=`) |
 | `/dashboard` | heading "Dashboard"; `role="status"` while the charts chunk loads; figures named "Tasks by status" and "Throughput" |
 | unknown route | heading "Page not found", inside the layout (nav still there) |
 | any signed-in page | combobox "Language" (or "Език") with options "English" / "Български" (values `en` / `bg`) |

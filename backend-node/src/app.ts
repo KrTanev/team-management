@@ -3,6 +3,7 @@ import express from "express";
 
 import { CORS_ORIGINS, DEBUG_QUERIES } from "./config.js";
 import { createTables, db, queryCounter } from "./db/client.js";
+import { docsRouter } from "./docs.js";
 import { errorHandler, notFoundHandler } from "./errors.js";
 import { authRouter } from "./routes/auth.js";
 import { systemRouter } from "./routes/system.js";
@@ -31,6 +32,7 @@ export function createApp() {
     queryCounter.run(store, next);
   });
 
+  app.use(docsRouter);
   app.use(systemRouter);
   app.use("/auth", authRouter);
   app.use("/users", usersRouter);
