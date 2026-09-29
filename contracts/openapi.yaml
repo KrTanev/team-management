@@ -367,6 +367,85 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /teams/{teamId}/messages:
+    parameters:
+      - $ref: '#/components/parameters/TeamId'
+    get:
+      x-status: build
+      summary: Chat history of the team's room (team members and global admins)
+      description: |
+        Built in be-websocket-rooms. New messages are sent and received over the
+        WebSocket — see `realtime.md`. This endpoint loads history: the newest
+        page first, then older pages via `nextCursor`. Messages inside a page are
+        oldest first (the order a chat shows them). Messages created after the
+        first page was read never show up on later pages.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - in: query
+          name: cursor
+          description: Opaque value from a previous `nextCursor` (an invalid one is a `422`).
+          schema: { type: string }
+      responses:
+        '200':
+          description: Page of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Message' }
+                  nextCursor:
+                    description: '`null` when there are no older messages'
+                    type: [string, 'null']
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /rtc/ice-servers:
+    get:
+      x-status: build
+      summary: STUN + short-lived TURN credentials for WebRTC calls (be-video-signaling)
+      description: See `realtime.md` → ICE servers.
+      responses:
+        '200':
+          description: ICE servers for `new RTCPeerConnection({iceServers})`
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [iceServers, ttlSeconds]
+                properties:
+                  iceServers:
+                    type: array
+                    items:
+                      type: object
+                      required: [urls]
+                      properties:
+                        urls: { type: array, items: { type: string } }
+                        username: { type: string, description: '`<unix expiry>:<userId>`' }
+                        credential: { type: string, description: 'base64(HMAC-SHA1(TURN_SECRET, username))' }
+                  ttlSeconds: { type: integer }
+
+  /ws:
+    get:
+      x-status: build
+      summary: WebSocket for chat rooms and call signaling — protocol in realtime.md
+      security: []
+      parameters:
+        - in: query
+          name: token
+          required: true
+          description: The bearer token (browsers can't set headers on a WebSocket)
+          schema: { type: string }
+      responses:
+        '101': { description: Switching protocols }
+        '401': { description: Missing or invalid token (or accept, then close with code 4401) }
+
   /projects:
     get:
       x-status: build
@@ -1010,6 +1089,18 @@ components:
           items: { $ref: '#/components/schemas/TeamMember' }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+    Message:
+      type: object
+      required: [id, teamId, authorId, authorName, body, createdAt, clientId]
+      properties:
+        id: { type: integer }
+        teamId: { type: integer }
+        authorId: { type: integer }
+        authorName: { type: string, description: The author's displayName }
+        body: { type: string, minLength: 1, maxLength: 2000 }
+        createdAt: { type: string, format: date-time }
+        clientId: { type: [string, 'null'], description: 'As the sender sent it (null if it did not) — lets a client match history to its optimistic copies' }
 
     TeamCreate:
       type: object

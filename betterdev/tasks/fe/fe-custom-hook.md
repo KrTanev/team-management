@@ -12,7 +12,8 @@ The pagination and debounce logic is (or will be) copied across Users, Projects 
   - `page` is 1-based, `offset = (page - 1) * pageSize`, `pageCount = max(1, ceil(total / pageSize))`
   - `next`/`prev` do nothing at the ends, `goTo(n)` clamps to `1..pageCount`
   - when `total` shrinks below the current page, `page` clamps to the last valid page
-- Both hooks are covered by your own tests (`*.test.ts(x)` under `src/`), the debounce one with fake timers
-- UsersPage uses both (and still sends at most 2 requests while typing "carol")
+- UsersPage uses both — the check wraps the two modules above and expects the page to call `usePagination` with the total from the API and `useDebouncedValue` with what's typed in the search box — and still sends at most 2 requests while typing "carol"
+
+**Also expected (reviewed, not checked automatically):** both hooks are covered by your own tests (`*.test.ts(x)` under `src/`), the debounce one with fake timers.
 
 Run it from **Actions → BetterDev check** with milestone `fe-custom-hook`. The hidden tests use the routes and names in `contracts/`, so stick to the contract; everything else is up to you.

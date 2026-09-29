@@ -10,8 +10,9 @@ Users and Tasks each hand-roll a table. Build one generic table whose columns ar
 - `DataTable.tsx` exports `DataTable<T>` and `type Column<T>`; `DataTable` takes `rows: T[]`, `columns: Column<T>[]` and `getRowId: (row: T) => string | number`
 - A column is `{ key, header: string, render?: (value, row) => ReactNode, sortable?: boolean }`. A `key` that isn't a property of `T` is a type error, and `render` receives the correctly typed value (`T[key]`, not a union of every property)
 - A sortable column's header is a button; clicking it sorts the rows by that column (ascending, then descending) and sets `aria-sort` on the column header
-- UsersPage uses it; `tsc` passes, and `DataTable.tsx` has no `any`
+- No `any` in `DataTable`'s public types: `rows`, `columns`, `getRowId` and `render`'s arguments keep their real types
+- UsersPage renders its table through this `DataTable` (the check wraps the module and expects UsersPage to pass it the users as `rows`); `tsc` passes
 
-The check type-checks a file of its own against your `Column<T>`/`DataTable` with `@ts-expect-error` cases, and renders `DataTable` directly.
+The check type-checks a file of its own against your `Column<T>`/`DataTable` — `@ts-expect-error` cases plus exact-type assertions that fail if any of those types is `any` — and renders `DataTable` directly.
 
 Run it from **Actions → BetterDev check** with milestone `fe-ts-generics`. The hidden tests use the routes and names in `contracts/`, so stick to the contract; everything else is up to you.

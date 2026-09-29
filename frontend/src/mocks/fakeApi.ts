@@ -59,6 +59,15 @@ export type Activity = {
   data: Record<string, unknown>;
   createdAt: string;
 };
+export type Message = {
+  id: number;
+  teamId: number;
+  authorId: number;
+  authorName: string;
+  body: string;
+  createdAt: string;
+  clientId: string | null;
+};
 type ExportJob = {
   id: string;
   status: string;
@@ -79,9 +88,10 @@ export type Db = {
   tasks: Task[];
   activity: Activity[];
   exports: ExportJob[];
+  messages: Message[];
   revokedTokens: Set<string>;
   idempotency: Map<string, { bodyHash: string; task: Task }>;
-  seq: { user: number; team: number; project: number; task: number; activity: number; token: number; export: number };
+  seq: { user: number; team: number; project: number; task: number; activity: number; token: number; export: number; message: number };
 };
 
 export type RecordedRequest = {
@@ -119,6 +129,7 @@ function freshDb(): Db {
     tasks: s.tasks as Task[],
     activity: [],
     exports: [],
+    messages: [],
     revokedTokens: new Set(),
     idempotency: new Map(),
     seq: {
@@ -129,6 +140,7 @@ function freshDb(): Db {
       activity: 0,
       token: 0,
       export: 0,
+      message: 0,
     },
   };
 }
@@ -729,6 +741,44 @@ route("GET", "/analytics/throughput", ({ user, query }) => {
   return out;
 });
 
+// team chat rooms (contracts/realtime.md) — messages arrive over the fake WebSocket in fakeRealtime.ts
+const roomAccess = (user: User, teamId: number): "not_found" | "forbidden" | null => {
+  if (!state.db.teams.some((t) => t.id === teamId)) return "not_found";
+  if (user.role === "admin" || state.db.teamMembers.some((m) => m.teamId === teamId && m.userId === user.id)) return null;
+  return "forbidden";
+};
+const encodeMessageCursor = (id: number) => btoa(`m:${id}`).replace(/=+$/, "");
+function decodeMessageCursor(cursor: string) {
+  let raw = "";
+  try {
+    raw = atob(cursor);
+  } catch {
+    /* invalid */
+  }
+  const m = /^m:(\d+)$/.exec(raw);
+  if (!m) throw invalid([{ field: "cursor", message: "Invalid cursor" }]);
+  return Number(m[1]);
+}
+route("GET", "/teams/:teamId/messages", ({ user, params, query }) => {
+  const teamId = Number(params.teamId);
+  const access = roomAccess(user, teamId);
+  if (access === "not_found") throw notFound("Team");
+  if (access === "forbidden") throw forbidden("Not a member of this team");
+  const limit = query.limit === undefined ? 50 : Number(query.limit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw invalid([{ field: "limit", message: "Must be 1–100" }]);
+  const before = query.cursor === undefined ? Infinity : decodeMessageCursor(query.cursor);
+  const older = state.db.messages.filter((m) => m.teamId === teamId && m.id < before).sort((a, b) => b.id - a.id);
+  const page = older.slice(0, limit).reverse();
+  return { items: page, nextCursor: older.length > limit ? encodeMessageCursor(page[0].id) : null };
+});
+route("GET", "/rtc/ice-servers", ({ user }) => ({
+  iceServers: [
+    { urls: ["stun:stun.mock.test:3478"] },
+    { urls: ["turn:turn.mock.test:3478"], username: `${Math.floor(Date.now() / 1000) + 3600}:${user.id}`, credential: "mock-credential" },
+  ],
+  ttlSeconds: 3600,
+}));
+
 // exports — finish instantly
 route("POST", "/exports/tasks", ({ user, query }) => {
   const projectId = intParam(query.projectId, "projectId");
@@ -1009,6 +1059,46 @@ export const fake = {
   loadActivity(n: number) {
     state.db.activity = generatedActivity(n);
     state.db.seq.activity = n;
+  },
+  /** The user a token belongs to (`token-<id>`), or null — used by the fake WebSocket. */
+  userForToken(token: string) {
+    return userFromToken(token);
+  },
+  /** May this user use the team's chat room? null when yes, else the error code. */
+  roomAccess(userId: number, teamId: number) {
+    const user = userById(userId);
+    return user ? roomAccess(user, teamId) : "forbidden";
+  },
+  /** Store a chat message as if the server had (see fakeRealtime.ts for the socket side). */
+  storeMessage(teamId: number, authorId: number, body: string, clientId: string | null = null): Message {
+    const message: Message = {
+      id: ++state.db.seq.message,
+      teamId,
+      authorId,
+      authorName: userById(authorId)?.displayName ?? `User ${authorId}`,
+      body,
+      createdAt: now(),
+      clientId,
+    };
+    state.db.messages.push(message);
+    return message;
+  },
+  /** `n` chat messages "Message 1" … "Message n" in a team's room, alternating between two members, one minute apart. */
+  addMessages(teamId: number, n: number) {
+    const members = state.db.teamMembers.filter((m) => m.teamId === teamId).map((m) => m.userId);
+    const start = Date.now() - n * 60_000;
+    for (let i = 1; i <= n; i++) {
+      const authorId = members[i % Math.max(members.length, 1)] ?? 1;
+      state.db.messages.push({
+        id: ++state.db.seq.message,
+        teamId,
+        authorId,
+        authorName: userById(authorId)?.displayName ?? `User ${authorId}`,
+        body: `Message ${i}`,
+        createdAt: new Date(start + i * 60_000).toISOString().replace(/\.\d{3}Z$/, "Z"),
+        clientId: null,
+      });
+    }
   },
   /** Append `n` extra users "User 7", "User 8", … (ids continue from the seed). */
   addUsers(n: number) {

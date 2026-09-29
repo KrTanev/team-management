@@ -1,7 +1,8 @@
 # Milestone briefs
 
-Each file is one BetterDev milestone. Run its check from **Actions → BetterDev
-check** with the id (the file name without `.md`).
+Each file is one BetterDev milestone — backend briefs in `be/`, frontend briefs
+in `fe/`. Run its check from **Actions → BetterDev check** with the id (the file
+name without `.md`).
 
 ## Backend — suggested order
 
@@ -20,6 +21,8 @@ check** with the id (the file name without `.md`).
 | be-jobs | Build | Background CSV export |
 | be-webhooks | Build | Signed outgoing webhooks |
 | be-observability | Build | Request IDs, structured logs, metrics |
+| be-websocket-rooms | Build | Team chat rooms over a WebSocket |
+| be-video-signaling | Build | Signaling and TURN credentials for video calls |
 
 ## Frontend — suggested order
 
@@ -37,7 +40,10 @@ check** with the id (the file name without `.md`).
 | fe-virtualization | Build | Activity log that scales |
 | fe-code-split | Build | Dashboard without bloating the bundle |
 | fe-i18n | Build | Dates, numbers and a second language |
+| fe-chat-room | Build | Live team chat |
+| fe-video-chat | Build | Video calls in the chat room |
 
 Frontend tasks don't need a backend: `npm run dev:mock` in `frontend/` runs the
-app against an in-browser mock of the whole API (`src/mocks/fakeApi.ts`), and the
+app against an in-browser mock of the whole API (`src/mocks/fakeApi.ts`, plus the
+chat socket in `src/mocks/fakeRealtime.ts`), and the
 frontend checks run against a mocked API too, never your backend.

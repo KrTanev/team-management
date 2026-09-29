@@ -13,8 +13,8 @@ tests check your work when you run it.
 frontend/         React 19 + Vite + TypeScript + Tailwind + TanStack Query
 backend-python/   FastAPI + SQLAlchemy                ┐ same API, pick one —
 backend-node/     Express 5 + TypeScript + node:sqlite ┘ both listen on :8000
-contracts/        openapi.yaml, seed data, UI contract, smoke tests
-betterdev/tasks/  one brief per milestone
+contracts/        openapi.yaml, realtime.md (WebSocket), seed data, UI contract, smoke tests
+betterdev/tasks/  one brief per milestone (be/ and fe/)
 ```
 
 ## Quick start
@@ -77,10 +77,10 @@ Use **Authorize** with a token from `POST /auth/login` to try protected endpoint
 
 ## Working on a task
 
-1. Read the brief in `betterdev/tasks/<milestone>.md`.
+1. Read the brief in `betterdev/tasks/be/<milestone>.md` or `betterdev/tasks/fe/<milestone>.md`.
 2. Stick to the contract in `contracts/` — `openapi.yaml` for the API,
-   `ui-contract.md` for routes and accessible names. The hidden tests use only
-   those; the internals are yours.
+   `realtime.md` for the WebSocket, `ui-contract.md` for routes and accessible
+   names. The hidden tests use only those; the internals are yours.
 3. Test locally:
    - Backend: `uv run pytest` or `npm test`, plus the contract smoke tests against
      your running server:

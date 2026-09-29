@@ -9,7 +9,8 @@ Checks sign in by putting a token in `localStorage["tm.token"]`, so keep that ke
 They render `export const routes` from `src/pages/routes.tsx` inside a
 `createMemoryRouter`, wrapped in `<AppProviders queryClient={...}>` from
 `src/AppProviders.tsx` — keep both exports, and put any new app-wide provider
-inside `AppProviders`. The mocked API lives at `VITE_API_URL=http://api.test`.
+inside `AppProviders`. The mocked API lives at `VITE_API_URL=http://api.test`; the realtime socket is
+`ws://api.test/ws?token=…`, answered by a fake that follows `realtime.md`.
 
 ## Shipped
 
@@ -37,6 +38,8 @@ Each task brief lists what its check looks for. The names it relies on:
 | `/activity` | heading "Activity log"; a `role="feed"` element whose `article` children are the entries (with `aria-posinset` / `aria-setsize`), each showing its relative time in a `<time dateTime="{createdAt}">` (from fe-i18n); comboboxes "Project" and "Entity type" whose values live in the URL (`?projectId=`, `?entityType=`) |
 | `/dashboard` | heading "Dashboard"; `role="status"` while the charts chunk loads; figures named "Tasks by status" and "Throughput" |
 | unknown route | heading "Page not found", inside the layout (nav still there) |
+| `/teams/:teamId/chat` (fe-chat-room) | heading "{team name} chat"; `role="log"` named "Messages" with one `article` per message (author's name and body), oldest first; textbox "Message" and button "Send"; `role="status"` named "Connection" reading "Connecting…", "Live" or "Reconnecting…"; a message the server hasn't confirmed yet shows "Sending…", a refused one "Failed to send" and a button "Retry" inside its `article`; button "Load older messages" while older history exists. The socket and its frames are in `realtime.md` |
+| same page, video call (fe-video-chat) | button "Join call"; during a call: toggle buttons "Mute" and "Turn off camera" (`aria-pressed`), button "Share screen" (may read "Stop sharing" while sharing), button "Leave call"; one `figure` per participant with `aria-label` = their displayName, yours labelled "You" (a `figcaption` alone doesn't name a figure for the checks — use `aria-label` or `aria-labelledby`); camera/microphone problems in `role="alert"` |
 | any signed-in page | combobox "Language" (or "Език") with options "English" / "Български" (values `en` / `bg`) |
 | dialogs | `role="dialog"`, named by their visible title, `aria-modal="true"`, a button "Close" |
 
@@ -61,6 +64,9 @@ With the language set to Bulgarian the checks look for these names:
   `contracts/seed.json`; the activity feed is empty unless a test loads entries).
 - They pass their own `QueryClient` with `retry: false` — except fe-fetch, which
   renders `<AppProviders>` without one so your default client is what's tested.
-- jsdom has no layout, no `ResizeObserver`/`IntersectionObserver` and no
-  `<dialog>.showModal()`. The checks stub the observers (and, for fe-virtualization,
-  element sizes); don't rely on native `<dialog>` behaviour.
+- jsdom has no layout, no `ResizeObserver`/`IntersectionObserver`, no
+  `<dialog>.showModal()` and no camera or WebRTC. For fe-video-chat the checks
+  provide stand-ins for `navigator.mediaDevices` and `RTCPeerConnection` and
+  look at what your code does with them. The checks also stub the observers
+  (and, for fe-virtualization, element sizes); don't rely on native `<dialog>`
+  behaviour.

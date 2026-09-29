@@ -22,6 +22,7 @@ export const routes: RouteObject[] = [
           { index: true, element: <Navigate to="/teams" replace /> },
           { path: "teams", element: <TeamsPage /> },
           { path: "teams/:teamId", element: <TeamDetailPage /> },
+          { path: "teams/:teamId/chat", element: <NotBuiltPage title="Team chat" task="fe-chat-room" /> },
           { path: "users", element: <UsersPage /> },
           { path: "projects", element: <NotBuiltPage title="Projects" task="fe-component" /> },
           { path: "activity", element: <NotBuiltPage title="Activity log" task="fe-virtualization" /> },

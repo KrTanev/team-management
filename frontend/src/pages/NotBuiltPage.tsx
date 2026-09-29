@@ -12,7 +12,7 @@ export const NotBuiltPage = ({ title, task }: Props) => (
       <Hammer className="mx-auto mb-3 size-6 text-slate-400" aria-hidden />
       <p className="text-sm text-slate-600">Not built yet.</p>
       <p className="mt-1 text-sm text-slate-500">
-        See <code className="rounded bg-slate-100 px-1">betterdev/tasks/{task}.md</code>
+        See <code className="rounded bg-slate-100 px-1">betterdev/tasks/fe/{task}.md</code>
       </p>
     </div>
   </>
