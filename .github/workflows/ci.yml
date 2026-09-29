@@ -36,7 +36,12 @@ jobs:
       - run: uv run pytest
       - name: Contract smoke tests
         run: |
-          BD_TEST_MODE=1 DATABASE_URL=sqlite:///./ci.db uv run uvicorn app.main:app --port 8000 &
+          # Run the server from the synced venv, not `uv run`, and stop it when the step
+          # ends: a uv process left running holds uv's cache lock, and setup-uv's
+          # post-job "Pruning cache" step then fails the job (exit code 2).
+          BD_TEST_MODE=1 DATABASE_URL=sqlite:///./ci.db setsid .venv/bin/uvicorn app.main:app --port 8000 &
+          SERVER=$!
+          trap 'kill -- -$SERVER 2>/dev/null || true' EXIT
           for i in $(seq 30); do curl -sf localhost:8000/health && break; sleep 1; done
           BASE_URL=http://localhost:8000 uv run --with pytest --with httpx pytest ../contracts/tests
 
@@ -60,7 +65,9 @@ jobs:
       - run: npm test
       - name: Contract smoke tests
         run: |
-          BD_TEST_MODE=1 DATABASE_URL=ci.db npm start &
+          BD_TEST_MODE=1 DATABASE_URL=ci.db setsid npm start &
+          SERVER=$!
+          trap 'kill -- -$SERVER 2>/dev/null || true' EXIT
           for i in $(seq 30); do curl -sf localhost:8000/health && break; sleep 1; done
           BASE_URL=http://localhost:8000 uv run --with pytest --with httpx pytest ../contracts/tests
 
