@@ -1,0 +1,7 @@
+{
+  "linkCodes": {
+    "backend": "PASTE-YOUR-BACKEND-LINK-CODE",
+    "frontend": "PASTE-YOUR-FRONTEND-LINK-CODE"
+  },
+  "backend": "python"
+}
