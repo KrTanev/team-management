@@ -1,6 +1,8 @@
 # fe-component — Projects page from small components
 
-**Type:** Build · **Track:** frontend · **Needs:** be-crud (or mock it)
+**Type:** Build · **Track:** frontend · **Needs:** be-crud (or mock it) · **Feature:** Projects
+
+**What the app's users get:** A Projects page lists your projects with their status and member count, filterable by status.
 
 **Where:** `frontend/src/` — `/projects`.
 

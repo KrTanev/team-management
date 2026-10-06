@@ -1,6 +1,8 @@
 # fe-fetch — Fix the data fetching
 
-**Type:** Fix · **Track:** frontend
+**Type:** Fix · **Track:** frontend · **Feature:** People directory
+
+**What the app's users get:** Searching people shows results for what you actually typed, errors appear in under a second, and a member removal that fails puts the member back.
 
 **Where:** `frontend/src/` — `pages/UsersPage.tsx`, `config/queryClient.config.ts`, `api/teams.ts`.
 

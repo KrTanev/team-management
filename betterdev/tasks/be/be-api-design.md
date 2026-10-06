@@ -1,6 +1,8 @@
 # be-api-design — Tasks API: filtering, sorting, pagination
 
-**Type:** Build + Fix · **Track:** backend · **Needs:** be-crud
+**Type:** Build + Fix · **Track:** backend · **Needs:** be-crud · **Feature:** Tasks
+
+**What the app's users get:** Tasks can be created, assigned and filtered by status, priority and assignee; "My tasks" shows your open work by due date; people search pages properly.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — new task routes; the users list.
 

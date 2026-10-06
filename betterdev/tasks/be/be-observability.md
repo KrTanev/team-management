@@ -1,6 +1,8 @@
 # be-observability — Request IDs, structured logs, metrics
 
-**Type:** Build · **Track:** backend
+**Type:** Build · **Track:** backend · **Feature:** Running in production
+
+**What the app's users get:** Nothing visible — internal. When someone reports a problem, support can find their exact request in the logs, and the team sees traffic and errors on a metrics dashboard.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — middleware.
 

@@ -1,10 +1,12 @@
 # fe-ts-generics — A typed, generic data table
 
-**Type:** Build · **Track:** frontend
+**Type:** Build · **Track:** frontend · **Feature:** People directory
+
+**What the app's users get:** Nothing visible — internal. One typed table component replaces the hand-rolled ones, so every list gets the same columns and sorting.
 
 **Where:** `frontend/src/` — `src/components/ui/DataTable.tsx`.
 
-Users and Tasks each hand-roll a table. Build one generic table whose columns are type-checked against the row type.
+The Users page hand-rolls its table, and the Tasks table in fe-routing would be the next copy. Build one generic table whose columns are type-checked against the row type.
 
 **Done when (checked by the BetterDev check):**
 - `DataTable.tsx` exports `DataTable<T>` and `type Column<T>`; `DataTable` takes `rows: T[]`, `columns: Column<T>[]` and `getRowId: (row: T) => string | number`

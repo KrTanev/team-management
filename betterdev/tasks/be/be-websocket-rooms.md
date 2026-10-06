@@ -1,8 +1,10 @@
 # be-websocket-rooms — Team chat rooms over a WebSocket
 
-**Type:** Build · **Track:** backend · **Needs:** be-api-design
+**Type:** Build · **Track:** backend · **Needs:** be-api-design · **Feature:** Team chat
 
-**Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json`. A `messages` table (index its foreign keys — be-profile checks every one), `GET /teams/{teamId}/messages`, and a WebSocket at `/ws`.
+**What the app's users get:** Every team has a chat room where messages appear instantly for everyone, with history to scroll back through.
+
+**Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json`. A `messages` table (index its foreign keys: be-profile's index check covers every table, so if you did be-profile first, run its check again), `GET /teams/{teamId}/messages`, and a WebSocket at `/ws`.
 
 Every team gets a chat room. Polling `GET /messages` every second would be slow and wasteful, so messages are pushed over one open WebSocket per browser tab. The protocol is in `contracts/realtime.md`; history is plain REST (`openapi.yaml`).
 

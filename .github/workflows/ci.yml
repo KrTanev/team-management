@@ -21,6 +21,17 @@ jobs:
             node: ['backend-node/**', 'contracts/**']
             frontend: ['frontend/**', 'contracts/**']
 
+  briefs:
+    # The feature map in betterdev/tasks/README.md and index.json (read by
+    # BetterDev) are generated from the briefs — fail if someone forgot to rebuild.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node betterdev/tasks/build.mjs --check
+
   backend-python:
     needs: changes
     if: needs.changes.outputs.python == 'true'

@@ -1,6 +1,8 @@
 # fe-form — Project form with real validation
 
-**Type:** Build · **Track:** frontend · **Needs:** fe-component
+**Type:** Build · **Track:** frontend · **Needs:** fe-component · **Feature:** Projects
+
+**What the app's users get:** Creating and editing a project shows errors on each field, a double click never creates two projects, and you're warned before losing unsaved changes.
 
 **Where:** `frontend/src/` — `/projects/new` and `/projects/{id}/edit`.
 

@@ -1,6 +1,8 @@
 # fe-chat-room — Live team chat
 
-**Type:** Build · **Track:** frontend · **Needs:** be-websocket-rooms (or mock it)
+**Type:** Build · **Track:** frontend · **Needs:** be-websocket-rooms (or mock it) · **Feature:** Team chat
+
+**What the app's users get:** A live chat page per team: messages appear instantly, sending shows progress, failed sends can be retried, and it reconnects by itself.
 
 **Where:** `frontend/src/` — `/teams/:teamId/chat` (the starter shows a placeholder there). Add a "Chat" link on the team page.
 
@@ -12,6 +14,7 @@ Build the team chat. New messages arrive over a WebSocket (`contracts/realtime.m
 - **Long rooms** (optional): `@tanstack/react-virtual` if a room holds thousands of messages.
 
 **Done when (checked by the BetterDev check):**
+- Heading "{team name} chat", a textbox "Message" and a button "Send" — every name the check uses is in `contracts/ui-contract.md`
 - The page opens `ws://<API host>/ws?token=<token>` — one socket per page, not per render — sends `join` for the team, and shows the connection state in `role="status"` named "Connection": "Connecting…", "Live", "Reconnecting…"
 - Messages show in `role="log"` named "Messages", one `article` each (author's name and body), oldest first; the newest 50 load first and "Load older messages" loads the rest
 - Sending shows the message at once, marked "Sending…", with a `clientId`; the server's copy replaces it — never two copies. A refused send is marked "Failed to send" with a "Retry" button that sends it again

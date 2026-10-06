@@ -1,6 +1,8 @@
 # fe-virtualization — Activity log that scales
 
-**Type:** Build · **Track:** frontend · **Needs:** be-service-layer (or mock it)
+**Type:** Build · **Track:** frontend · **Needs:** be-service-layer (or mock it) · **Feature:** Activity log
+
+**What the app's users get:** The activity log scrolls smoothly through thousands of entries and can be filtered by project and type.
 
 **Where:** `frontend/src/` — `/activity`.
 

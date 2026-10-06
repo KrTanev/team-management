@@ -1,6 +1,8 @@
 # be-idempotency — Safe retries and concurrent edits
 
-**Type:** Build · **Track:** backend · **Needs:** be-api-design
+**Type:** Build · **Track:** backend · **Needs:** be-api-design · **Feature:** Tasks
+
+**What the app's users get:** Retrying "Create task" on a flaky connection never creates duplicates, and two people editing the same task can't silently overwrite each other.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — task creation and task updates.
 

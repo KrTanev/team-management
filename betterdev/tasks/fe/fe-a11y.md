@@ -1,6 +1,8 @@
 # fe-a11y — Make the Add member dialog accessible
 
-**Type:** Fix · **Track:** frontend
+**Type:** Fix · **Track:** frontend · **Feature:** Teams & members
+
+**What the app's users get:** Keyboard and screen-reader users can add team members: the dialog is announced, focus stays inside it, and Escape closes it.
 
 **Where:** `frontend/src/` — `components/teams/AddMemberDialog.tsx`.
 

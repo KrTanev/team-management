@@ -1,0 +1,761 @@
+{
+  "generatedBy": "betterdev/tasks/build.mjs",
+  "order": {
+    "backend": [
+      "be-security",
+      "be-errors",
+      "be-config",
+      "be-crud",
+      "be-api-design",
+      "be-profile",
+      "be-idempotency",
+      "be-rate-limit",
+      "be-service-layer",
+      "be-caching",
+      "be-jobs",
+      "be-webhooks",
+      "be-observability",
+      "be-websocket-rooms",
+      "be-video-signaling"
+    ],
+    "frontend": [
+      "fe-a11y",
+      "fe-fetch",
+      "fe-error-boundary",
+      "fe-custom-hook",
+      "fe-ts-generics",
+      "fe-component",
+      "fe-form",
+      "fe-routing",
+      "fe-xss",
+      "fe-virtualization",
+      "fe-code-split",
+      "fe-i18n",
+      "fe-chat-room",
+      "fe-video-chat"
+    ]
+  },
+  "features": [
+    {
+      "id": "sessions",
+      "title": "Sign-in & sessions",
+      "summary": "Sign in, stay signed in safely, and only do what your role allows.",
+      "internal": false,
+      "tasks": [
+        "be-security",
+        "be-rate-limit",
+        "fe-error-boundary"
+      ]
+    },
+    {
+      "id": "people",
+      "title": "People directory",
+      "summary": "Find anyone in the company: search, filter by role and page through hundreds of people.",
+      "internal": false,
+      "tasks": [
+        "fe-fetch",
+        "fe-custom-hook",
+        "fe-ts-generics"
+      ]
+    },
+    {
+      "id": "teams",
+      "title": "Teams & members",
+      "summary": "Create teams and manage who is in them, with clear messages when something isn't allowed.",
+      "internal": false,
+      "tasks": [
+        "be-errors",
+        "fe-a11y"
+      ]
+    },
+    {
+      "id": "projects",
+      "title": "Projects",
+      "summary": "Create projects, choose who is on them and open each project's own pages.",
+      "internal": false,
+      "tasks": [
+        "be-crud",
+        "fe-component",
+        "fe-form",
+        "fe-routing"
+      ]
+    },
+    {
+      "id": "tasks",
+      "title": "Tasks",
+      "summary": "Plan the work as tasks: assign, filter, sort and edit them together, with rich descriptions.",
+      "internal": false,
+      "tasks": [
+        "be-api-design",
+        "be-profile",
+        "be-idempotency",
+        "fe-xss"
+      ]
+    },
+    {
+      "id": "activity",
+      "title": "Activity log",
+      "summary": "See who changed what, newest first, all the way back.",
+      "internal": false,
+      "tasks": [
+        "be-service-layer",
+        "fe-virtualization"
+      ]
+    },
+    {
+      "id": "dashboard",
+      "title": "Dashboard",
+      "summary": "Charts and numbers on how the work is going, always current.",
+      "internal": false,
+      "tasks": [
+        "be-caching",
+        "fe-code-split"
+      ]
+    },
+    {
+      "id": "export",
+      "title": "CSV export",
+      "summary": "Download a project's tasks as a spreadsheet, however many there are.",
+      "internal": false,
+      "tasks": [
+        "be-jobs"
+      ]
+    },
+    {
+      "id": "integrations",
+      "title": "Integrations",
+      "summary": "Other tools are told when a task's status changes.",
+      "internal": false,
+      "tasks": [
+        "be-webhooks"
+      ]
+    },
+    {
+      "id": "chat",
+      "title": "Team chat",
+      "summary": "Every team has a live chat room.",
+      "internal": false,
+      "tasks": [
+        "be-websocket-rooms",
+        "fe-chat-room"
+      ]
+    },
+    {
+      "id": "video",
+      "title": "Video calls",
+      "summary": "Start a video call from the team's chat room.",
+      "internal": false,
+      "tasks": [
+        "be-video-signaling",
+        "fe-video-chat"
+      ]
+    },
+    {
+      "id": "language",
+      "title": "Language & formats",
+      "summary": "Use the app in English or Bulgarian, with local dates and numbers.",
+      "internal": false,
+      "tasks": [
+        "fe-i18n"
+      ]
+    },
+    {
+      "id": "operations",
+      "title": "Running in production",
+      "summary": "Nothing users see directly: the app starts safely, and problems can be traced and measured.",
+      "internal": true,
+      "tasks": [
+        "be-config",
+        "be-observability"
+      ]
+    }
+  ],
+  "tasks": {
+    "be-api-design": {
+      "id": "be-api-design",
+      "title": "Tasks API: filtering, sorting, pagination",
+      "type": "Build + Fix",
+      "track": "backend",
+      "feature": "tasks",
+      "needs": [
+        {
+          "id": "be-crud",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Tasks can be created, assigned and filtered by status, priority and assignee; \"My tasks\" shows your open work by due date; people search pages properly.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — new task routes; the users list.",
+      "intro": "Build the task endpoints (`/projects/{id}/tasks`, `/tasks/{id}`, `/me/tasks`) with the filters, sorting and pagination from the contract. While you're at it, fix `GET /users`: it loads every user into memory, filters there, and ignores `limit`/`offset`.",
+      "libraries": null,
+      "doneWhen": "- `GET /users?limit=2&offset=2` returns exactly 2 users starting from the third, with the right `total`\n- `GET /users?search=&role=` filters and paginates in the database: `total` counts every match, `items` holds at most `limit` of them (checked on the large seed's 506 users, which the starter already loads). `search` is a case-insensitive substring match on email, first name, last name, \"first last\" and display name; `%` and `_` in it match literally\n- The small seed's tasks load on reset; task create/read/update/delete work as in the contract (`status` defaults to `todo`, `priority` to `medium`, `version` starts at 1 and goes up by 1 on every update); a project you can't see → `404`, deleting a task as a plain project member → `403`\n- Task list filters (`status`, `priority`, `assigneeId`) combine with AND; `sort` supports every value in the contract — `priority` by rank (`low` < `medium` < `high` < `urgent`), tasks without `dueDate` last in both directions, ties by `id` ascending; invalid `sort` → `422`\n- Assigning a task (on create or update) to someone outside the project → `422`\n- `/me/tasks` returns only the caller's open (not `done`) tasks, ordered by `dueDate` with nulls last, ties by `id`\n- `limit=0` or `limit=101` → `422` everywhere (`/users`, `/teams`, `/projects`, `/projects/{id}/tasks`, `/me/tasks`)",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-api-design.md"
+    },
+    "be-caching": {
+      "id": "be-caching",
+      "title": "Cache the dashboard numbers",
+      "type": "Build",
+      "track": "backend",
+      "feature": "dashboard",
+      "needs": [
+        {
+          "id": "be-service-layer",
+          "mockable": false
+        }
+      ],
+      "usersGet": "The dashboard loads instantly on repeat visits and still shows a change the moment it happens.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — `GET /analytics/summary`.",
+      "intro": "The dashboard summary aggregates every visible task on each request. Cache it, and make sure a change shows up immediately.",
+      "libraries": null,
+      "doneWhen": "- Responses carry an `ETag`; a request with a matching `If-None-Match` → `304` with no body; a stale or unrelated `If-None-Match` → `200` with the body\n- A repeated request within the cache lifetime (keep entries for at least 30 s) runs at most 1 SQL query (see `X-Query-Count` — the starter adds it to every response in test mode; keep it working) — the token lookup; a `304` too\n- Creating, updating or deleting a task, or adding/removing a project member → the very next summary reflects it (no stale numbers, and the `ETag` changes)\n- Two users who see different projects never get each other's cached numbers",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-caching.md"
+    },
+    "be-config": {
+      "id": "be-config",
+      "title": "Configuration that fails fast",
+      "type": "Fix",
+      "track": "backend",
+      "feature": "operations",
+      "needs": [],
+      "usersGet": "Nothing visible — internal. A misconfigured deploy refuses to start with a clear message, instead of failing later in front of users.",
+      "internal": true,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — `app/config.py` / `src/config.ts`.",
+      "intro": "Settings are read ad-hoc from the environment with silent fallbacks. A typo in `PORT` or an empty `DATABASE_URL` only shows up later as a confusing crash, and nothing stops test mode from being on in production.\n\nThe settings to cover (add later ones, like `TOKEN_TTL_SECONDS` or `WEBHOOK_URL`, as the tasks introduce them):\n\n| Variable | Valid values | Default |\n|---|---|---|\n| `APP_ENV` | `development`, `test`, `production` | `development` |\n| `PORT` | integer 1–65535 (Python validates it too, even though `uvicorn --port` picks the port) | `8000` |\n| `DATABASE_URL` | non-empty | the local SQLite file |\n| `CORS_ORIGINS` | comma-separated `http(s)://` origins, at least one | `http://localhost:5173` |\n| `BD_TEST_MODE` | `0` or `1` | `0` |",
+      "libraries": null,
+      "doneWhen": "- An invalid value — `PORT=abc`, `PORT=70000`, `CORS_ORIGINS=` (empty), `CORS_ORIGINS=not-a-url`, `DATABASE_URL=` (empty), `APP_ENV=staging` — makes the process exit non-zero within a few seconds without ever answering HTTP, printing a one-line message that names the variable (e.g. `PORT must be an integer between 1 and 65535, got \"abc\"`) — not a stack trace\n- `APP_ENV=production` together with `BD_TEST_MODE=1` → refuses to start the same way (the message names both variables)\n- `APP_ENV=production` without test mode starts, and `/__test__/reset` is a `404` there\n- `GET /health` still works with only defaults in development (no `APP_ENV`, `CORS_ORIGINS` or `BD_TEST_MODE` set), and with valid non-default values such as `CORS_ORIGINS=http://a.example,https://b.example`",
+      "alsoExpected": "one typed settings object, loaded and validated once at startup; nothing else reads the environment directly.",
+      "notes": "The check starts extra copies of your server with these variables, the same way the check runner does (`uv run uvicorn app.main:app` / `npm start`).",
+      "path": "betterdev/tasks/be/be-config.md"
+    },
+    "be-crud": {
+      "id": "be-crud",
+      "title": "Projects CRUD with members",
+      "type": "Build",
+      "track": "backend",
+      "feature": "projects",
+      "needs": [],
+      "usersGet": "People can create projects, add and remove project members, and only see the projects they're on.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json`. New tables and routes.",
+      "intro": "Projects don't exist yet. Build the `/projects` endpoints from `contracts/openapi.yaml`: create, read, update, delete, and add/remove members. Model the relationships properly — join tables for project members (with a role) and project teams, not arrays of ids. Extend the seeder so `seed.json`'s projects load.",
+      "libraries": null,
+      "doneWhen": "- `POST /__test__/reset` loads the seed's projects, project members and project teams (`members` ordered by `userId`)\n- `POST /projects` → `201` with the project (`status` defaults to `planned`, `teamIds` to `[]`); the caller is its only member, as `admin`. Invalid bodies and unknown `teamIds` → `422`\n- `GET /projects` lists only projects the caller is a member of (global admins see all), ordered by id, paginated (`limit` 1–100, else `422`), filterable by `status` and `teamId` (combined with AND)\n- `GET /projects/{id}` for a project you can't see, or that doesn't exist → `404` (not `403` — don't leak that it exists); the same for `PATCH`, `DELETE` and the member routes\n- `PATCH` / `DELETE` by a plain project member → `403`; by a project admin or global admin → `200` / `204`\n- `POST /projects/{id}/members` by a project admin or global admin → `201` with the updated project; by a plain member → `403`; for an existing member → `409`; for an unknown user → `404`\n- `DELETE /projects/{id}/members/{userId}` → `204`, the removed user no longer sees the project; a non-member → `404`; removing the last project admin → `409`\n- Deleting a project deletes its members and team links; deleting a team or a user removes it from every project's `teamIds` / `members` (no `500`, no dangling ids)",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-crud.md"
+    },
+    "be-errors": {
+      "id": "be-errors",
+      "title": "One error format, correct status codes",
+      "type": "Fix",
+      "track": "backend",
+      "feature": "teams",
+      "needs": [],
+      "usersGet": "Adding someone who is already on a team, or reusing a team name in different capitals, gets a clear message instead of a crash.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — the teams routes and the error handler.",
+      "intro": "The teams routes answer a missing team with `{\"message\": \"Team not found\"}` instead of the error envelope. Adding someone who is already a member crashes with a `500` and a plain-text body. Team names are unique only by exact case. Unhandled errors return plain text.",
+      "libraries": null,
+      "doneWhen": "- Every error response in the API — including `404` for unknown routes, a wrong HTTP method on an existing route (`404` or `405` — use code `not_found` for both; the contract has no separate code for it) and malformed JSON bodies (`422`) — uses `{\"error\": {\"code\", \"message\"}}` with a JSON content type\n- `GET/PATCH/DELETE /teams/{id}` and `POST /teams/{id}/members` for a missing team → `404` envelope with code `not_found`\n- Adding an existing member → `409` `conflict`, not `500`\n- Team names are unique ignoring case: `POST /teams` with `\"team marvin\"` when \"Team Marvin\" exists → `409`, and so is renaming another team to `\"TEAM MARVIN\"` with `PATCH`; renaming a team to a different case of its own name is fine\n- An unexpected exception → `500` envelope with code `internal_error` and a generic message (no stack trace, no SQL, not the exception's own message in the body). To check this, add the test hook `GET /__test__/error`: only when `BD_TEST_MODE=1` (like `/__test__/reset`), it throws an unhandled `Error(\"boom\")` / `RuntimeError(\"boom\")` — see `contracts/openapi.yaml`. The server keeps working afterwards",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-errors.md"
+    },
+    "be-idempotency": {
+      "id": "be-idempotency",
+      "title": "Safe retries and concurrent edits",
+      "type": "Build",
+      "track": "backend",
+      "feature": "tasks",
+      "needs": [
+        {
+          "id": "be-api-design",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Retrying \"Create task\" on a flaky connection never creates duplicates, and two people editing the same task can't silently overwrite each other.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — task creation and task updates.",
+      "intro": "Mobile clients retry `POST` on flaky networks and create duplicate tasks. Two people editing a task at once silently overwrite each other.",
+      "libraries": null,
+      "doneWhen": "- `POST /projects/{id}/tasks` with an `Idempotency-Key` header: the same key + same body returns the original `201` response (same status, same body, same id) without creating another task\n- Same key with a different body → `409` `conflict` and nothing is created; keys are scoped to the user (another user sending the same key creates their own task); without the header every `POST` creates a task\n- `PATCH /tasks/{id}` requires `version` (missing → `422`); a stale version → `409` and nothing changes; a matching one → `200` with `version` + 1\n- 20 concurrent `PATCH` requests (sent at the same moment from 20 connections) with the same starting `version` → exactly one `200`, the other 19 `409` — no `500`s — and the stored task is the winner's change with `version` + 1",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-idempotency.md"
+    },
+    "be-jobs": {
+      "id": "be-jobs",
+      "title": "Background CSV export",
+      "type": "Build",
+      "track": "backend",
+      "feature": "export",
+      "needs": [
+        {
+          "id": "be-api-design",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Exporting a project with thousands of tasks to CSV doesn't time out: it runs in the background and you download the file when it's ready.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — new `/exports` routes.",
+      "intro": "Exporting 20,000 tasks inside a request times out. Move it to a background job.",
+      "libraries": null,
+      "doneWhen": "- `POST /exports/tasks?projectId=` → `202` with the job (`pending` or `running`) and a `Location: /exports/{id}` header, immediately; a project you can't see → `404`; a missing `projectId` → `422`\n- `GET /exports/{id}` goes `pending` → `running` → `done` (never backwards), with `rowCount` and `finishedAt` when done. The check runs your server with `EXPORT_JOB_DELAY_SECONDS=2`: the worker waits that long after marking a job `running` (default `0`) so the check can see each state\n- `GET /exports/{id}/download` → `409` until done, then `text/csv` in the format from the contract: header row `id,title,status,priority,assignee,dueDate`, one row per task ordered by id, `assignee` = display name, empty cells for nulls, proper quoting\n- Another user asking for your export (even a global admin) → `404`, for the status and the download\n- A job that crashes ends up `failed` (with `finishedAt`), not stuck in `running`, and the worker keeps processing later jobs. To check this, `POST /exports/tasks?projectId=…&simulateFailure=true` (honoured only when `BD_TEST_MODE=1`) must make the job throw once it runs",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-jobs.md"
+    },
+    "be-observability": {
+      "id": "be-observability",
+      "title": "Request IDs, structured logs, metrics",
+      "type": "Build",
+      "track": "backend",
+      "feature": "operations",
+      "needs": [],
+      "usersGet": "Nothing visible — internal. When someone reports a problem, support can find their exact request in the logs, and the team sees traffic and errors on a metrics dashboard.",
+      "internal": true,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — middleware.",
+      "intro": "When something goes wrong in production there's no way to connect a user's report to a log line.",
+      "libraries": null,
+      "doneWhen": "- Every response — errors included — has `X-Request-ID`; an incoming `X-Request-ID` (up to 128 characters of `A–Z a–z 0–9 . _ -`) is reused, otherwise a new unique one is generated\n- One JSON log line per request on stdout (flush it — stdout is a file in CI) with `request_id`, `method`, `route`, `status` (a number) and `duration_ms` (a number). `route` is the OpenAPI-style template, e.g. `/teams/{teamId}` (in Express, turn `/:teamId` into `/{teamId}`), or `null` when no route matched. Other lines on stdout/stderr are fine\n- `GET /metrics` (no auth) serves Prometheus text including a counter `http_requests_total{method,route,status}` (same `route` templates) and a histogram `http_request_duration_seconds` (`_bucket`, `_sum`, `_count`, labelled at least by `method` and `route`)\n- No tokens, passwords or `Authorization` headers ever appear in the server output — not even for failed logins",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-observability.md"
+    },
+    "be-profile": {
+      "id": "be-profile",
+      "title": "Find and fix the slow paths",
+      "type": "Fix + Pressure",
+      "track": "backend",
+      "feature": "tasks",
+      "needs": [
+        {
+          "id": "be-api-design",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Team and task lists stay fast with 20,000 tasks in the system.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — teams listing, task listing, indexes.",
+      "intro": "`GET /teams` runs a query per team and per member. With the large seed (`POST /__test__/reset?size=large`) it gets worse, and so will your own endpoints if they have the same shape.\n\nFirst extend the seeder so `POST /__test__/reset?size=large` also generates the 100 projects and 20,000 tasks described in `contracts/SEED.md` — the check refuses to run without them.",
+      "libraries": null,
+      "doneWhen": "- The large seed has the projects and tasks from `contracts/SEED.md` (spot-checked: counts, a project's members, a task's fields)\n- `GET /teams?limit=40` on the large seed runs ≤ 5 queries (`X-Query-Count` — the number of SQL queries the request ran; the starter adds it in test mode, keep it working) — the same for 4 teams or 40\n- `GET /projects/{id}/tasks` and `/me/tasks` use a constant number of queries regardless of page size (`limit=5` and `limit=100` run the same number)\n- On the large seed, the 95th percentile of 50 `GET /projects/{id}/tasks?status=todo&sort=-dueDate` calls (after a short warm-up) is under 150 ms on the CI runner\n- Indexes exist for the foreign keys and filters you query by — the check opens the test SQLite database and fails if a declared foreign-key column is not the first column of some index",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-profile.md"
+    },
+    "be-rate-limit": {
+      "id": "be-rate-limit",
+      "title": "Rate-limit login",
+      "type": "Build",
+      "track": "backend",
+      "feature": "sessions",
+      "needs": [],
+      "usersGet": "Someone guessing passwords is locked out after 5 wrong tries for a minute; everyone else can still sign in.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — `POST /auth/login`.",
+      "intro": "Nothing stops someone from trying thousands of passwords.",
+      "libraries": null,
+      "doneWhen": "- After 5 failed logins for the same email (known or unknown — don't leak which) from the same client within the window, the next attempt → `429` with the error envelope (`rate_limited`) and a `Retry-After` header: whole seconds, at least 1, at most the window. The first 5 failures are ordinary `401`s\n- The window is `LOGIN_RATE_LIMIT_WINDOW_SECONDS` (default `60`). Once limited, even the correct password gets `429` until the oldest failure leaves the window; then the correct password works again. The check starts a second copy of your server with `LOGIN_RATE_LIMIT_WINDOW_SECONDS=3` for this\n- Other emails and other endpoints are not affected\n- A successful login doesn't count toward the limit",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-rate-limit.md"
+    },
+    "be-security": {
+      "id": "be-security",
+      "title": "Close the authorization holes",
+      "type": "Fix",
+      "track": "backend",
+      "feature": "sessions",
+      "needs": [],
+      "usersGet": "Members can't create accounts or make themselves admins, signing out really signs you out on that device, and sessions expire after a day.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — auth and users routes.",
+      "intro": "Four real holes ship in the starter. Find them from the contract: who may create users, what login errors reveal, what logout actually does, and what a member may change on their own profile.",
+      "libraries": null,
+      "doneWhen": "- A member calling `POST /users` → `403` (and no user is created); admins still get `201`\n- Login returns the same status (`401`) and the same body for an unknown email and a wrong password\n- After `POST /auth/logout` the token → `401` on every endpoint (`/auth/me`, `/users`, `/teams`, …, and a second logout); the same user's other tokens (other devices) keep working\n- A member sending `role` in `PATCH /users/{their id}` → `403` and the role is unchanged; they can still edit their other fields; admins can change anyone's role\n- Tokens expire after `TOKEN_TTL_SECONDS` seconds (default `86400`, i.e. 24h); an expired token → `401`. The check starts a second copy of your server with `TOKEN_TTL_SECONDS=2`",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-security.md"
+    },
+    "be-service-layer": {
+      "id": "be-service-layer",
+      "title": "Activity feed and analytics through a service layer",
+      "type": "Build",
+      "track": "backend",
+      "feature": "activity",
+      "needs": [
+        {
+          "id": "be-crud",
+          "mockable": false
+        },
+        {
+          "id": "be-api-design",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Every change to projects, members and tasks shows up in the activity log, and the dashboard gets its numbers.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — a service layer between routes and the database.",
+      "intro": "Every change should appear in the activity feed, and the dashboard needs numbers. If each route handler writes its own activity rows, one will forget. Put the business operations in services that record activity as part of the same transaction.",
+      "libraries": null,
+      "doneWhen": "- Creating/updating/deleting projects, project members and tasks each records exactly one activity row with the `action`, `entityType`, `entityId`, `projectId`, `actorId` and `data` from the table in the contract's `Activity` schema (e.g. `task.status_changed` with `{\"from\": \"todo\", \"to\": \"done\"}`)\n- If the change fails (validation error, `403`, `404`, `409` stale version, removing the last admin, …), no activity row is written\n- `GET /activity` is newest first, cursor-paginated (no duplicates or gaps while new rows arrive; invalid cursor → `422`), filterable by `projectId`, `actorId` and `entityType`, and only shows projects the caller can see (global admins see all, including rows of deleted projects)\n- `GET /analytics/summary` and `/analytics/throughput` match the contract for the caller's visible projects: every status, priority and project-status key (zeros included), `overdueTasks`, `topAssignees`, and one zero-filled entry per UTC day ending today (`days` 1–90, else `422`)",
+      "alsoExpected": "route handlers don't touch the ORM / SQL directly for these operations, and each operation and its activity row are written in one transaction.",
+      "notes": null,
+      "path": "betterdev/tasks/be/be-service-layer.md"
+    },
+    "be-video-signaling": {
+      "id": "be-video-signaling",
+      "title": "Signaling and TURN credentials for video calls",
+      "type": "Build",
+      "track": "backend",
+      "feature": "video",
+      "needs": [
+        {
+          "id": "be-websocket-rooms",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Team members can start a video call from the chat room, even from behind strict office or mobile networks.",
+      "internal": false,
+      "where": "the same WebSocket (`/ws`), plus `GET /rtc/ice-servers`.",
+      "intro": "Team rooms get a video call. The video itself goes browser to browser over WebRTC. Your server only **signals**: it tells the people in a call about each other and relays their SDP offers/answers and ICE candidates. It never touches the media. Frames are in `contracts/realtime.md` → Calls.\n\nBrowsers behind strict NATs can't reach each other directly, so they relay the media through a **TURN** server. Hard-coded TURN passwords leak, so hand out short-lived ones: coturn's `use-auth-secret` mode checks credentials that your API signs with a secret you share with it — no database needed.",
+      "libraries": "- **Signaling:** nothing new. It's more frames on the socket from be-websocket-rooms (FastAPI WebSockets / `ws`).\n- **TURN credentials:** only the standard library — Python's `hmac` + `hashlib.sha1` + `base64`, Node's `crypto.createHmac(\"sha1\", secret)`.\n- **TURN server** (to run it for real; not checked): [coturn](https://github.com/coturn/coturn) with `use-auth-secret` and `static-auth-secret=<TURN_SECRET>`.\n- **Bigger calls** (not checked): past ~4 people a mesh gets too heavy, because every browser uploads a stream to every other one. An SFU forwards the streams instead. With [LiveKit](https://docs.livekit.io/) your backend mints room access tokens — `livekit-api` for Python, `livekit-server-sdk` for Node — and LiveKit does the media. `aiortc` (Python) is only for when your server itself must send or receive media, e.g. recording.",
+      "doneWhen": "- `call.join` answers `call.participants` with everyone already in that team's call, and tells them `call.joined`; the same membership rules as `join` (`forbidden`, `not_found`)\n- `signal` reaches only the addressed user, with `from` set by the server and `data` untouched — and only when both are in the same team's call; otherwise `not_in_call`. Room members who aren't in the call hear nothing\n- `call.leave`, or a socket that dies without closing (a crashed tab), tells the others `call.left`; that user can't signal any more and isn't listed as a participant\n- `GET /rtc/ice-servers` (signed in) returns a STUN entry and a TURN entry with `urls` from `TURN_URLS`, `username` `<unix expiry>:<userId>` expiring within 24 hours, and `credential` = `base64(HMAC-SHA1(TURN_SECRET, username))`, plus `ttlSeconds` (how long the credentials stay valid). Without `TURN_SECRET` only the STUN entry is returned (`contracts/realtime.md` → ICE servers). The secret never appears in the response",
+      "alsoExpected": null,
+      "notes": "The check runs your server with `TURN_SECRET=bd-check-turn-secret` and `TURN_URLS=turn:turn.bd-check.test:3478,turns:turn.bd-check.test:5349`.",
+      "path": "betterdev/tasks/be/be-video-signaling.md"
+    },
+    "be-webhooks": {
+      "id": "be-webhooks",
+      "title": "Signed outgoing webhooks",
+      "type": "Build",
+      "track": "backend",
+      "feature": "integrations",
+      "needs": [
+        {
+          "id": "be-api-design",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Other tools (a chat bot, a CI pipeline, …) are told when a task's status changes, and can verify the message really came from the app.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — task updates.",
+      "intro": "Integrations want to hear about task status changes. Send a webhook without slowing the request down and without letting receivers be spoofed.",
+      "libraries": null,
+      "doneWhen": "- When `WEBHOOK_URL` is set, every task status change `POST`s JSON `{event: \"task.status_changed\", taskId, projectId, from, to, occurredAt}` to it (see `webhooks` in `contracts/openapi.yaml`); an update that doesn't change the status sends nothing\n- Header `X-Signature: sha256=<hex>` = HMAC-SHA256 of the raw body with `WEBHOOK_SECRET`\n- The API response doesn't wait for the webhook (a receiver that sleeps 5 s doesn't make `PATCH` slow — the check allows 2 s)\n- A `5xx` from the receiver — or no answer at all (connection refused, timeout) — is retried up to 3 times (4 attempts in total) with exponential backoff — first retry within 2 s, every retry within 15 s, each wait longer than the previous one. A `2xx`, `3xx` or `4xx` answer is final: it is not retried, and a retry that gets one ends it\n- Header `X-Delivery-Id` stays the same across retries of one event and differs between events",
+      "alsoExpected": null,
+      "notes": "The check runs your server with `WEBHOOK_URL=http://127.0.0.1:8791/hook` and `WEBHOOK_SECRET=bd-check-secret`, and a receiver on that port.",
+      "path": "betterdev/tasks/be/be-webhooks.md"
+    },
+    "be-websocket-rooms": {
+      "id": "be-websocket-rooms",
+      "title": "Team chat rooms over a WebSocket",
+      "type": "Build",
+      "track": "backend",
+      "feature": "chat",
+      "needs": [
+        {
+          "id": "be-api-design",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Every team has a chat room where messages appear instantly for everyone, with history to scroll back through.",
+      "internal": false,
+      "where": "`backend-python/` or `backend-node/` — whichever you set in `betterdev.json`. A `messages` table (index its foreign keys: be-profile's index check covers every table, so if you did be-profile first, run its check again), `GET /teams/{teamId}/messages`, and a WebSocket at `/ws`.",
+      "intro": "Every team gets a chat room. Polling `GET /messages` every second would be slow and wasteful, so messages are pushed over one open WebSocket per browser tab. The protocol is in `contracts/realtime.md`; history is plain REST (`openapi.yaml`).",
+      "libraries": "- **Python:** FastAPI's built-in `@app.websocket(...)` routes (from Starlette). `uvicorn[standard]` (already a dependency) brings the WebSocket protocol library. Database calls are synchronous: run them with `starlette.concurrency.run_in_threadpool` so they don't block the event loop.\n- **Node:** [`ws`](https://github.com/websockets/ws) (`npm i ws`, `npm i -D @types/ws`). Attach a `WebSocketServer({ noServer: true })` to the HTTP server's `upgrade` event in `src/server.ts`, and check the token before calling `handleUpgrade`. Socket.IO would also work, but it uses its own protocol and a browser `WebSocket` can't talk to it — the contract is plain WebSockets.\n- **More than one instance** (not checked): each process only knows its own sockets. Publish every message through Redis pub/sub (`redis` / `ioredis`) and let each instance deliver to its local clients.",
+      "doneWhen": "- `/ws?token=<token>` accepts a valid login token; a missing or wrong token never gets a working socket (refuse the handshake, or close with `4401`)\n- `join` answers `joined` for team members and global admins; `not_found` for an unknown team, `forbidden` for anyone else. `ping` answers `pong`. Errors — including frames that aren't JSON or have an unknown `type` — come back as `error` frames and never close the socket\n- A `message` is only accepted from a socket that joined the room; the body is trimmed and must be 1–2000 characters (`validation_error`). It is **stored first**, then sent to every socket in the room (the sender's too, every tab of every member, nobody in other rooms) with its server `id`, `authorName`, `createdAt` and the echoed `clientId`\n- `GET /teams/{teamId}/messages` returns the newest `limit` messages (default 50), oldest first, with `nextCursor` for older pages; messages written while paging don't shift later pages; invalid `cursor`/`limit` → `422`, non-members `403`, unknown team `404`, no token `401`\n- Someone removed from the team stops receiving the room's messages at once — even on a socket that joined earlier — and their sends are refused\n- 45 messages sent at once from three sockets all arrive and are all stored",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/be/be-websocket-rooms.md"
+    },
+    "fe-a11y": {
+      "id": "fe-a11y",
+      "title": "Make the Add member dialog accessible",
+      "type": "Fix",
+      "track": "frontend",
+      "feature": "teams",
+      "needs": [],
+      "usersGet": "Keyboard and screen-reader users can add team members: the dialog is announced, focus stays inside it, and Escape closes it.",
+      "internal": false,
+      "where": "`frontend/src/` — `components/teams/AddMemberDialog.tsx`.",
+      "intro": "The dialog is a styled `div`. Screen readers don't know it's a dialog, focus stays behind it, Escape does nothing, the close control isn't a button and the selects have no labels.",
+      "libraries": null,
+      "doneWhen": "- `role=\"dialog\"`, `aria-modal=\"true\"`, named \"Add member\" by its title\n- Opening moves focus into the dialog; Tab and Shift+Tab stay inside it\n- Escape and a button named \"Close\" close it, and focus returns to the \"Add member\" button\n- The selects are labelled \"User\" and \"Role\"\n- No axe violations inside the dialog (`color-contrast` is skipped — the check has no layout)\n- Adding a member still works",
+      "alsoExpected": null,
+      "notes": "The check runs in jsdom, which has no native `<dialog>` modality (no `showModal()`, no inert background) — keep the focus trap in your own code.",
+      "path": "betterdev/tasks/fe/fe-a11y.md"
+    },
+    "fe-chat-room": {
+      "id": "fe-chat-room",
+      "title": "Live team chat",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "chat",
+      "needs": [
+        {
+          "id": "be-websocket-rooms",
+          "mockable": true
+        }
+      ],
+      "usersGet": "A live chat page per team: messages appear instantly, sending shows progress, failed sends can be retried, and it reconnects by itself.",
+      "internal": false,
+      "where": "`frontend/src/` — `/teams/:teamId/chat` (the starter shows a placeholder there). Add a \"Chat\" link on the team page.",
+      "intro": "Build the team chat. New messages arrive over a WebSocket (`contracts/realtime.md`); history comes from `GET /teams/{teamId}/messages`. `npm run dev:mock` answers the socket too (`src/mocks/fakeRealtime.ts`), so no backend is needed. Open two browser tabs as different users to talk to yourself.",
+      "libraries": "- **The socket:** the browser's built-in `WebSocket` is enough. Wrap it in a hook (e.g. `useRoomSocket(teamId)`) that owns connecting, joining, reconnecting and closing. `socket.io-client` only talks to Socket.IO servers, not to this contract. `react-use-websocket` is fine if you'd rather not write the reconnect logic yourself.\n- **History:** TanStack Query's `useInfiniteQuery` (already installed) with `nextCursor`. Write pushed messages into its cache with `queryClient.setQueryData` — don't refetch on every push.\n- **Long rooms** (optional): `@tanstack/react-virtual` if a room holds thousands of messages.",
+      "doneWhen": "- Heading \"{team name} chat\", a textbox \"Message\" and a button \"Send\" — every name the check uses is in `contracts/ui-contract.md`\n- The page opens `ws://<API host>/ws?token=<token>` — one socket per page, not per render — sends `join` for the team, and shows the connection state in `role=\"status\"` named \"Connection\": \"Connecting…\", \"Live\", \"Reconnecting…\"\n- Messages show in `role=\"log\"` named \"Messages\", one `article` each (author's name and body), oldest first; the newest 50 load first and \"Load older messages\" loads the rest\n- Sending shows the message at once, marked \"Sending…\", with a `clientId`; the server's copy replaces it — never two copies. A refused send is marked \"Failed to send\" with a \"Retry\" button that sends it again\n- Messages from others appear without refetching history\n- After the connection drops it reconnects by itself (first retry within about a second, backing off after that), catches up on what it missed, and shows nothing twice\n- Leaving the page closes the socket and stops reconnecting",
+      "alsoExpected": "new messages don't yank the view down while you're reading older ones (show \"N new messages\" instead), and loading older messages keeps your place.",
+      "notes": null,
+      "path": "betterdev/tasks/fe/fe-chat-room.md"
+    },
+    "fe-code-split": {
+      "id": "fe-code-split",
+      "title": "Dashboard without bloating the bundle",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "dashboard",
+      "needs": [],
+      "usersGet": "A Dashboard page with charts of tasks by status and throughput, without slowing down the rest of the app.",
+      "internal": false,
+      "where": "`frontend/src/` — `/dashboard`.",
+      "intro": "Build the dashboard with charts from `/analytics/summary` and `/analytics/throughput`. The chart code is heavy — nobody on the Teams page should download it.",
+      "libraries": null,
+      "doneWhen": "- Heading \"Dashboard\"; figures named \"Tasks by status\" and \"Throughput\" (e.g. `<figure>` with a `<figcaption>`)\n- The dashboard page and chart library are loaded with `React.lazy`; a `role=\"status\"` fallback shows while they load\n- After `npm run build`, the initial download — the entry chunk and every chunk it imports statically — contains neither the modules `/dashboard` loads lazily nor anything only they import (the chart library, whichever you pick). The check reads `dist/.vite/manifest.json` — enable `build.manifest` — and the build's module graph\n- Hovering (or focusing) the Dashboard nav link preloads the chunk",
+      "alsoExpected": null,
+      "notes": "The check doesn't look for particular libraries or file names: it tracks your `import()` calls to learn which of your modules going from `/teams` to `/dashboard` loads lazily, then follows their static imports through the build — so import lazy modules with a plain string path. Keep the chart library out of everything outside the dashboard: imported from the app shell it becomes shared code, and the Teams page downloads it.",
+      "path": "betterdev/tasks/fe/fe-code-split.md"
+    },
+    "fe-component": {
+      "id": "fe-component",
+      "title": "Projects page from small components",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "projects",
+      "needs": [
+        {
+          "id": "be-crud",
+          "mockable": true
+        }
+      ],
+      "usersGet": "A Projects page lists your projects with their status and member count, filterable by status.",
+      "internal": false,
+      "where": "`frontend/src/` — `/projects`.",
+      "intro": "Build the Projects page (it's a placeholder today) from small, reusable pieces: a project card, a status badge, an empty state. Use the shared `components/ui` primitives; add to them rather than copying styles.",
+      "libraries": null,
+      "doneWhen": "- Heading \"Projects\"; one link per project named by the project name, going to `/projects/{id}`, and a link \"New project\" going to `/projects/new`\n- A combobox named \"Status\" filters the list (`All` plus each status)\n- Loading shows `role=\"status\"`; an API error shows `role=\"alert\"` with the message; no projects shows an empty state (\"No projects…\") with a \"New project\" link\n- Each card (the `li` or `article` around the project link) shows the member count (\"3 members\") and a status badge with visible text (not colour only)",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/fe/fe-component.md"
+    },
+    "fe-custom-hook": {
+      "id": "fe-custom-hook",
+      "title": "Extract reusable hooks",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "people",
+      "needs": [],
+      "usersGet": "Nothing visible — internal. Search and paging share one implementation, so they behave the same on every list.",
+      "internal": true,
+      "where": "`frontend/src/` — `src/hooks/`.",
+      "intro": "The pagination and debounce logic is (or will be) copied across Users, Projects and Tasks. Extract it.",
+      "libraries": null,
+      "doneWhen": "- `src/hooks/useDebouncedValue.ts` exports `useDebouncedValue<T>(value: T, delayMs: number): T` — returns the first value immediately, then each new value once it has been stable for `delayMs`; no timers left after unmount\n- `src/hooks/usePagination.ts` exports `usePagination({ total, pageSize })` returning `{ offset, page, pageCount, next, prev, goTo, canNext, canPrev }`:\n  - `page` is 1-based, `offset = (page - 1) * pageSize`, `pageCount = max(1, ceil(total / pageSize))`\n  - `next`/`prev` do nothing at the ends, `goTo(n)` clamps to `1..pageCount`\n  - when `total` shrinks below the current page, `page` clamps to the last valid page\n- UsersPage uses both — the check wraps the two modules above and expects the page to call `usePagination` with the total from the API and `useDebouncedValue` with what's typed in the search box — and still sends at most 2 requests while typing \"carol\"",
+      "alsoExpected": "both hooks are covered by your own tests (`*.test.ts(x)` under `src/`), the debounce one with fake timers.",
+      "notes": null,
+      "path": "betterdev/tasks/fe/fe-custom-hook.md"
+    },
+    "fe-error-boundary": {
+      "id": "fe-error-boundary",
+      "title": "Errors that recover",
+      "type": "Fix",
+      "track": "frontend",
+      "feature": "sessions",
+      "needs": [],
+      "usersGet": "A page that breaks shows \"Something went wrong\" with a Try again button instead of a blank screen, and an expired session sends you to sign in and back to where you were.",
+      "internal": false,
+      "where": "`frontend/src/` — `components/layout/ErrorBoundary.tsx`, the axios client, routing.",
+      "intro": "The error boundary never catches anything. And when a token expires every page shows a generic error instead of sending you to sign in.",
+      "libraries": null,
+      "doneWhen": "- A render error inside a page shows a heading \"Something went wrong\" with a \"Try again\" button; the sidebar and top bar stay usable\n- \"Try again\" renders the page again with fresh data — once the API behaves, the page recovers\n- Navigating to another page clears the error\n- Any `401` from the API (except a failed sign-in) clears the stored token and redirects to `/login`, and after signing in you return to the page you were on\n- Each error is reported to `console.error` — a couple of times at most (React logs it too), never in a loop",
+      "alsoExpected": null,
+      "notes": "The check causes the render error by having the mocked API return malformed data (e.g. a team whose `members` is `null`).",
+      "path": "betterdev/tasks/fe/fe-error-boundary.md"
+    },
+    "fe-fetch": {
+      "id": "fe-fetch",
+      "title": "Fix the data fetching",
+      "type": "Fix",
+      "track": "frontend",
+      "feature": "people",
+      "needs": [],
+      "usersGet": "Searching people shows results for what you actually typed, errors appear in under a second, and a member removal that fails puts the member back.",
+      "internal": false,
+      "where": "`frontend/src/` — `pages/UsersPage.tsx`, `config/queryClient.config.ts`, `api/teams.ts`.",
+      "intro": "The users search fires a request per keystroke and shows whichever response arrives last — sometimes results for an older query. A `404` is retried five times, two seconds apart, before the user sees an error. Removing a team member hides them immediately, and if the request fails they stay hidden.",
+      "libraries": null,
+      "doneWhen": "- Typing \"carol\" quickly sends at most 2 requests to `/users`\n- When responses arrive out of order, the table always matches the current search text\n- `4xx` responses are not retried; the error appears in under a second\n- A failed member removal puts the member back and shows the error\n- Changing page keeps the previous rows visible until the next page arrives (no flash of spinner)",
+      "alsoExpected": null,
+      "notes": "Unlike the other checks, this one renders `<AppProviders>` **without** a `queryClient`, so your app's own default client (and its retry settings) is what gets tested.",
+      "path": "betterdev/tasks/fe/fe-fetch.md"
+    },
+    "fe-form": {
+      "id": "fe-form",
+      "title": "Project form with real validation",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "projects",
+      "needs": [
+        {
+          "id": "fe-component",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Creating and editing a project shows errors on each field, a double click never creates two projects, and you're warned before losing unsaved changes.",
+      "internal": false,
+      "where": "`frontend/src/` — `/projects/new` and `/projects/{id}/edit`.",
+      "intro": "Build one form component used for both create and edit.",
+      "libraries": null,
+      "doneWhen": "- Fields labelled \"Name\", \"Description\", \"Status\" (a select whose option values are the API statuses); button \"Save project\"\n- Client-side rules match the contract (name required, ≤ 120 chars; description ≤ 5000) — an invalid form sends nothing and shows the error on the field\n- A `422` from the API maps each `details[].field` to the matching field's error, linked with `aria-describedby`\n- The button is disabled while saving; double-clicking creates one project\n- After saving you land on `/projects/{id}`; edit loads the current values and saves with `PATCH`\n- Leaving the page with unsaved changes asks for confirmation — in-app navigation with `window.confirm` (cancel stays on the form), closing or reloading the tab via `beforeunload`; after saving it doesn't ask",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/fe/fe-form.md"
+    },
+    "fe-i18n": {
+      "id": "fe-i18n",
+      "title": "Dates, numbers and a second language",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "language",
+      "needs": [
+        {
+          "id": "fe-virtualization",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Use the app in English or Bulgarian, with dates, numbers and plurals right for the language.",
+      "internal": false,
+      "where": "`frontend/src/` — formatting helpers and a language switcher.",
+      "intro": "Dates show as raw ISO strings. Add proper formatting and a second language (Bulgarian).",
+      "libraries": null,
+      "doneWhen": "- Numbers are formatted for the language with `Intl.NumberFormat`: a team with 12345 members shows \"12,345 members\" / \"12 345 члена\" on its card\n- A language switcher on every signed-in page (combobox \"Language\", options \"English\" / \"Български\") toggles English/Bulgarian for navigation, headings and buttons — the Bulgarian names are in `contracts/ui-contract.md`; the choice survives a reload\n- The `<html lang>` attribute follows the choice (`en` / `bg`)\n- Activity entries show when they happened in a `<time dateTime=\"{createdAt}\">` whose text is the relative time `Intl.RelativeTimeFormat` gives for the current language (\"3 hours ago\" / \"преди 3 часа\"; any unit, `numeric` or `style` Intl produces is fine) — and it changes when the language does\n- Plurals are correct in both languages on the team cards (1 member / 2 members; 1 член / 2 члена)",
+      "alsoExpected": "every other date (created and due dates, tooltips, …) goes through `Intl.DateTimeFormat` for the current language — no hand-built strings like `` `${d.getMonth() + 1}/${d.getDate()}` ``.",
+      "notes": "The relative-time check opens `/activity`, so it uses the same jsdom layout stubs as fe-virtualization.",
+      "path": "betterdev/tasks/fe/fe-i18n.md"
+    },
+    "fe-routing": {
+      "id": "fe-routing",
+      "title": "Project detail with nested routes",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "projects",
+      "needs": [
+        {
+          "id": "fe-component",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Each project has Overview, Tasks and Settings pages; task filters live in the link so you can share them; only admins reach Settings.",
+      "internal": false,
+      "where": "`frontend/src/` — `/projects/:id/*`.",
+      "intro": "Build the project detail area with nested routes and URL-driven state.",
+      "libraries": null,
+      "doneWhen": "- `/projects/:id` shows the project name as heading and links \"Overview\", \"Tasks\", \"Settings\" (the active one has `aria-current=\"page\"`)\n- `/projects/:id/tasks` has a table named \"Tasks\" and \"Status\" and \"Priority\" filters (option values are the API values, `\"\"` for all) stored in the query string — reloading or sharing the URL keeps them\n- `/projects/:id/settings` (heading \"Settings\") is only for project admins and global admins; others are redirected to Overview\n- An unknown project shows a heading \"Project not found\", and an unknown route anywhere shows a heading \"Page not found\" inside the layout",
+      "alsoExpected": null,
+      "notes": null,
+      "path": "betterdev/tasks/fe/fe-routing.md"
+    },
+    "fe-ts-generics": {
+      "id": "fe-ts-generics",
+      "title": "A typed, generic data table",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "people",
+      "needs": [],
+      "usersGet": "Nothing visible — internal. One typed table component replaces the hand-rolled ones, so every list gets the same columns and sorting.",
+      "internal": true,
+      "where": "`frontend/src/` — `src/components/ui/DataTable.tsx`.",
+      "intro": "The Users page hand-rolls its table, and the Tasks table in fe-routing would be the next copy. Build one generic table whose columns are type-checked against the row type.",
+      "libraries": null,
+      "doneWhen": "- `DataTable.tsx` exports `DataTable<T>` and `type Column<T>`; `DataTable` takes `rows: T[]`, `columns: Column<T>[]` and `getRowId: (row: T) => string | number`\n- A column is `{ key, header: string, render?: (value, row) => ReactNode, sortable?: boolean }`. A `key` that isn't a property of `T` is a type error, and `render` receives the correctly typed value (`T[key]`, not a union of every property)\n- A sortable column's header is a button; clicking it sorts the rows by that column (ascending, then descending) and sets `aria-sort` on the column header\n- No `any` in `DataTable`'s public types: `rows`, `columns`, `getRowId` and `render`'s arguments keep their real types\n- UsersPage renders its table through this `DataTable` (the check wraps the module and expects UsersPage to pass it the users as `rows`); `tsc` passes",
+      "alsoExpected": null,
+      "notes": "The check type-checks a file of its own against your `Column<T>`/`DataTable` — `@ts-expect-error` cases plus exact-type assertions that fail if any of those types is `any` — and renders `DataTable` directly.",
+      "path": "betterdev/tasks/fe/fe-ts-generics.md"
+    },
+    "fe-video-chat": {
+      "id": "fe-video-chat",
+      "title": "Video calls in the chat room",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "video",
+      "needs": [
+        {
+          "id": "fe-chat-room",
+          "mockable": false
+        },
+        {
+          "id": "be-video-signaling",
+          "mockable": true
+        }
+      ],
+      "usersGet": "Join a video call from the team chat: see everyone, mute, turn your camera off and share your screen.",
+      "internal": false,
+      "where": "`frontend/src/` — on the chat page, `/teams/:teamId/chat`.",
+      "intro": "Add a video call to the room. Media goes browser to browser over WebRTC. Your code swaps offers, answers and ICE candidates over the room's socket (`contracts/realtime.md` → Calls). Whoever joins sends an offer to everyone already in the call; the others answer.",
+      "libraries": "- **1:1 and small calls:** nothing to install. `navigator.mediaDevices.getUserMedia` for the camera, `RTCPeerConnection` per participant, `getDisplayMedia` for screen sharing — all built into the browser. Read MDN's \"Perfect negotiation\" before you write the offer/answer code. `simple-peer` is a thin wrapper, but it's barely maintained — prefer the native API.\n- **ICE servers:** fetch them from `GET /rtc/ice-servers` before you create a connection. They include short-lived TURN credentials; never hard-code TURN passwords in the bundle.\n- **Bigger calls** (not checked): a mesh stops working past ~4 people. With an SFU such as LiveKit, use `livekit-client` and `@livekit/components-react` instead of one `RTCPeerConnection` per person.",
+      "doneWhen": "- \"Join call\" gets the ICE servers from the API, asks for camera and microphone, sends `call.join`, and creates one `RTCPeerConnection` per participant with those `iceServers`. It adds the local tracks and sends an offer to each participant already there; answers and ICE candidates from them are applied, and your own candidates are sent to them\n- Someone who joins after you gets an answer to their offer (you don't offer to them)\n- Each participant has a tile: a `figure` with `aria-label` = their display name, and yours labelled \"You\"\n- \"Mute\" and \"Turn off camera\" are toggle buttons (`aria-pressed`) that set the track's `enabled` — no new offer, no stopped tracks\n- \"Share screen\" swaps the outgoing video with `RTCRtpSender.replaceTrack(screenTrack)` — no renegotiation — and puts the camera back when sharing ends (including from the browser's own \"Stop sharing\" button)\n- \"Leave call\", and leaving the page, stop every local track (the camera light goes off), close every connection and send `call.leave`. When someone else leaves, their connection closes and their tile goes\n- If the camera or microphone is blocked, say so in `role=\"alert\"` and join anyway, to watch and listen",
+      "alsoExpected": "when a connection's state becomes `failed` (e.g. Wi-Fi → mobile data), call `restartIce()` instead of dropping the call.",
+      "notes": "The check runs in jsdom, which has no camera or WebRTC. It installs stand-ins for `navigator.mediaDevices`, `MediaStream` and `RTCPeerConnection`, and looks at what your code does with them. To try it for real, open two browsers on your machine (`npm run dev` with your backend).",
+      "path": "betterdev/tasks/fe/fe-video-chat.md"
+    },
+    "fe-virtualization": {
+      "id": "fe-virtualization",
+      "title": "Activity log that scales",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "activity",
+      "needs": [
+        {
+          "id": "be-service-layer",
+          "mockable": true
+        }
+      ],
+      "usersGet": "The activity log scrolls smoothly through thousands of entries and can be filtered by project and type.",
+      "internal": false,
+      "where": "`frontend/src/` — `/activity`.",
+      "intro": "Build the activity log. People scroll back through thousands of entries.",
+      "libraries": null,
+      "doneWhen": "- Heading \"Activity log\"; a `role=\"feed\"` with an `article` per visible entry (with `aria-posinset`, 1-based, and `aria-setsize` — `-1` while the total is unknown), each with a readable sentence (\"Bob Smith moved Define KPI list from todo to review\")\n- With 10,000 entries loaded, fewer than 100 `article` elements are in the DOM at any time\n- Scrolling near the end fetches the next page with `cursor`; no page is fetched twice and no entry shows twice\n- Filters — comboboxes \"Project\" and \"Entity type\" — live in the URL (`?projectId=`, `?entityType=`)",
+      "alsoExpected": null,
+      "notes": "An `Activity` carries ids, not names (see `openapi.yaml`): resolve actors with `/users/{id}` and task titles with `/tasks/{id}` (or `data.title` where the action has one), and cache them — don't refetch per row.\n\nThe check runs in jsdom, which has no layout: it stubs element sizes (`offsetHeight`/`clientHeight` 600, `getBoundingClientRect` height 50), `ResizeObserver` and `IntersectionObserver`, and \"scrolls\" by setting `scrollTop` on the feed and its ancestors (and `window.scrollY`), firing `scroll` and reporting every observed element as intersecting. `@tanstack/react-virtual` works with it.",
+      "path": "betterdev/tasks/fe/fe-virtualization.md"
+    },
+    "fe-xss": {
+      "id": "fe-xss",
+      "title": "Render task descriptions safely",
+      "type": "Build",
+      "track": "frontend",
+      "feature": "tasks",
+      "needs": [
+        {
+          "id": "fe-routing",
+          "mockable": false
+        }
+      ],
+      "usersGet": "Task descriptions support Markdown formatting, and a malicious description can't run code in a teammate's browser.",
+      "internal": false,
+      "where": "`frontend/src/` — the task detail view, `/projects/:id/tasks/:taskId`.",
+      "intro": "Task descriptions are Markdown written by users. Render them — and make sure a description can't run code in someone else's browser.",
+      "libraries": null,
+      "doneWhen": "- `/projects/:id/tasks/:taskId` shows the task title as heading and the description in a region named \"Description\" (e.g. a `section` labelled by an h2 \"Description\")\n- Markdown renders (headings, lists, bold, code, links)\n- Nothing in a description can run code: `<script>`, `<iframe>` (also `srcdoc`), `<object>`/`<embed>`, `<meta>`/`<base>`/`<link>`, inline event handlers (`onerror`, `onload`, … — also inside SVG and MathML) and `javascript:`/`data:` URLs in any link, form or `src` attribute never reach the DOM — however they're written (raw HTML, Markdown links, images, autolinks, reference links, entity-encoded or mixed-case schemes)\n- `javascript:` and `data:` links are removed; external links get `rel=\"noopener noreferrer\"`",
+      "alsoExpected": null,
+      "notes": "The check renders a battery of hostile descriptions and inspects the resulting DOM, so how you get there — a Markdown renderer that never emits raw HTML, or HTML run through a sanitizer — is up to you.",
+      "path": "betterdev/tasks/fe/fe-xss.md"
+    }
+  }
+}

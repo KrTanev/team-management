@@ -1,6 +1,8 @@
 # fe-xss — Render task descriptions safely
 
-**Type:** Build · **Track:** frontend · **Needs:** fe-routing
+**Type:** Build · **Track:** frontend · **Needs:** fe-routing · **Feature:** Tasks
+
+**What the app's users get:** Task descriptions support Markdown formatting, and a malicious description can't run code in a teammate's browser.
 
 **Where:** `frontend/src/` — the task detail view, `/projects/:id/tasks/:taskId`.
 

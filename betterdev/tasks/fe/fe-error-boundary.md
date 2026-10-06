@@ -1,6 +1,8 @@
 # fe-error-boundary — Errors that recover
 
-**Type:** Fix · **Track:** frontend
+**Type:** Fix · **Track:** frontend · **Feature:** Sign-in & sessions
+
+**What the app's users get:** A page that breaks shows "Something went wrong" with a Try again button instead of a blank screen, and an expired session sends you to sign in and back to where you were.
 
 **Where:** `frontend/src/` — `components/layout/ErrorBoundary.tsx`, the axios client, routing.
 

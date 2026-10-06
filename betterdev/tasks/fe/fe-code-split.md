@@ -1,6 +1,8 @@
 # fe-code-split — Dashboard without bloating the bundle
 
-**Type:** Build · **Track:** frontend
+**Type:** Build · **Track:** frontend · **Feature:** Dashboard
+
+**What the app's users get:** A Dashboard page with charts of tasks by status and throughput, without slowing down the rest of the app.
 
 **Where:** `frontend/src/` — `/dashboard`.
 

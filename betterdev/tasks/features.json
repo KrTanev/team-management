@@ -1,0 +1,15 @@
+[
+  { "id": "sessions", "title": "Sign-in & sessions", "summary": "Sign in, stay signed in safely, and only do what your role allows." },
+  { "id": "people", "title": "People directory", "summary": "Find anyone in the company: search, filter by role and page through hundreds of people." },
+  { "id": "teams", "title": "Teams & members", "summary": "Create teams and manage who is in them, with clear messages when something isn't allowed." },
+  { "id": "projects", "title": "Projects", "summary": "Create projects, choose who is on them and open each project's own pages." },
+  { "id": "tasks", "title": "Tasks", "summary": "Plan the work as tasks: assign, filter, sort and edit them together, with rich descriptions." },
+  { "id": "activity", "title": "Activity log", "summary": "See who changed what, newest first, all the way back." },
+  { "id": "dashboard", "title": "Dashboard", "summary": "Charts and numbers on how the work is going, always current." },
+  { "id": "export", "title": "CSV export", "summary": "Download a project's tasks as a spreadsheet, however many there are." },
+  { "id": "integrations", "title": "Integrations", "summary": "Other tools are told when a task's status changes." },
+  { "id": "chat", "title": "Team chat", "summary": "Every team has a live chat room." },
+  { "id": "video", "title": "Video calls", "summary": "Start a video call from the team's chat room." },
+  { "id": "language", "title": "Language & formats", "summary": "Use the app in English or Bulgarian, with local dates and numbers." },
+  { "id": "operations", "title": "Running in production", "summary": "Nothing users see directly: the app starts safely, and problems can be traced and measured.", "internal": true }
+]

@@ -1,6 +1,8 @@
 # fe-video-chat — Video calls in the chat room
 
-**Type:** Build · **Track:** frontend · **Needs:** fe-chat-room, be-video-signaling (or mock it)
+**Type:** Build · **Track:** frontend · **Needs:** fe-chat-room, be-video-signaling (or mock it) · **Feature:** Video calls
+
+**What the app's users get:** Join a video call from the team chat: see everyone, mute, turn your camera off and share your screen.
 
 **Where:** `frontend/src/` — on the chat page, `/teams/:teamId/chat`.
 

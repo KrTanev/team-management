@@ -1,6 +1,8 @@
 # be-rate-limit — Rate-limit login
 
-**Type:** Build · **Track:** backend
+**Type:** Build · **Track:** backend · **Feature:** Sign-in & sessions
+
+**What the app's users get:** Someone guessing passwords is locked out after 5 wrong tries for a minute; everyone else can still sign in.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — `POST /auth/login`.
 

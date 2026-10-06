@@ -1,6 +1,8 @@
 # be-profile — Find and fix the slow paths
 
-**Type:** Fix + Pressure · **Track:** backend · **Needs:** be-api-design
+**Type:** Fix + Pressure · **Track:** backend · **Needs:** be-api-design · **Feature:** Tasks
+
+**What the app's users get:** Team and task lists stay fast with 20,000 tasks in the system.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — teams listing, task listing, indexes.
 
@@ -10,7 +12,7 @@ First extend the seeder so `POST /__test__/reset?size=large` also generates the 
 
 **Done when (checked by the BetterDev check):**
 - The large seed has the projects and tasks from `contracts/SEED.md` (spot-checked: counts, a project's members, a task's fields)
-- `GET /teams?limit=40` on the large seed runs ≤ 5 queries (`X-Query-Count`) — the same for 4 teams or 40
+- `GET /teams?limit=40` on the large seed runs ≤ 5 queries (`X-Query-Count` — the number of SQL queries the request ran; the starter adds it in test mode, keep it working) — the same for 4 teams or 40
 - `GET /projects/{id}/tasks` and `/me/tasks` use a constant number of queries regardless of page size (`limit=5` and `limit=100` run the same number)
 - On the large seed, the 95th percentile of 50 `GET /projects/{id}/tasks?status=todo&sort=-dueDate` calls (after a short warm-up) is under 150 ms on the CI runner
 - Indexes exist for the foreign keys and filters you query by — the check opens the test SQLite database and fails if a declared foreign-key column is not the first column of some index

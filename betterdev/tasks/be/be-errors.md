@@ -1,13 +1,15 @@
 # be-errors — One error format, correct status codes
 
-**Type:** Fix · **Track:** backend
+**Type:** Fix · **Track:** backend · **Feature:** Teams & members
+
+**What the app's users get:** Adding someone who is already on a team, or reusing a team name in different capitals, gets a clear message instead of a crash.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — the teams routes and the error handler.
 
 The teams routes answer a missing team with `{"message": "Team not found"}` instead of the error envelope. Adding someone who is already a member crashes with a `500` and a plain-text body. Team names are unique only by exact case. Unhandled errors return plain text.
 
 **Done when (checked by the BetterDev check):**
-- Every error response in the API — including `404` for unknown routes, a wrong HTTP method on an existing route (`404` or `405`) and malformed JSON bodies (`422`) — uses `{"error": {"code", "message"}}` with a JSON content type
+- Every error response in the API — including `404` for unknown routes, a wrong HTTP method on an existing route (`404` or `405` — use code `not_found` for both; the contract has no separate code for it) and malformed JSON bodies (`422`) — uses `{"error": {"code", "message"}}` with a JSON content type
 - `GET/PATCH/DELETE /teams/{id}` and `POST /teams/{id}/members` for a missing team → `404` envelope with code `not_found`
 - Adding an existing member → `409` `conflict`, not `500`
 - Team names are unique ignoring case: `POST /teams` with `"team marvin"` when "Team Marvin" exists → `409`, and so is renaming another team to `"TEAM MARVIN"` with `PATCH`; renaming a team to a different case of its own name is fine

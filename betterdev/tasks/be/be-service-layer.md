@@ -1,6 +1,8 @@
 # be-service-layer — Activity feed and analytics through a service layer
 
-**Type:** Build · **Track:** backend · **Needs:** be-crud, be-api-design
+**Type:** Build · **Track:** backend · **Needs:** be-crud, be-api-design · **Feature:** Activity log
+
+**What the app's users get:** Every change to projects, members and tasks shows up in the activity log, and the dashboard gets its numbers.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — a service layer between routes and the database.
 

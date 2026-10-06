@@ -1,6 +1,8 @@
 # be-config — Configuration that fails fast
 
-**Type:** Fix · **Track:** backend
+**Type:** Fix · **Track:** backend · **Feature:** Running in production
+
+**What the app's users get:** Nothing visible — internal. A misconfigured deploy refuses to start with a clear message, instead of failing later in front of users.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — `app/config.py` / `src/config.ts`.
 

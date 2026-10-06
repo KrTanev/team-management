@@ -1,6 +1,8 @@
 # fe-i18n — Dates, numbers and a second language
 
-**Type:** Build · **Track:** frontend · **Needs:** fe-virtualization
+**Type:** Build · **Track:** frontend · **Needs:** fe-virtualization · **Feature:** Language & formats
+
+**What the app's users get:** Use the app in English or Bulgarian, with dates, numbers and plurals right for the language.
 
 **Where:** `frontend/src/` — formatting helpers and a language switcher.
 

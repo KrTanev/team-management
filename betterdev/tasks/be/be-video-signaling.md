@@ -1,6 +1,8 @@
-# be-video-signaling — Signaling for video calls
+# be-video-signaling — Signaling and TURN credentials for video calls
 
-**Type:** Build · **Track:** backend · **Needs:** be-websocket-rooms
+**Type:** Build · **Track:** backend · **Needs:** be-websocket-rooms · **Feature:** Video calls
+
+**What the app's users get:** Team members can start a video call from the chat room, even from behind strict office or mobile networks.
 
 **Where:** the same WebSocket (`/ws`), plus `GET /rtc/ice-servers`.
 
@@ -18,7 +20,7 @@ Browsers behind strict NATs can't reach each other directly, so they relay the m
 - `call.join` answers `call.participants` with everyone already in that team's call, and tells them `call.joined`; the same membership rules as `join` (`forbidden`, `not_found`)
 - `signal` reaches only the addressed user, with `from` set by the server and `data` untouched — and only when both are in the same team's call; otherwise `not_in_call`. Room members who aren't in the call hear nothing
 - `call.leave`, or a socket that dies without closing (a crashed tab), tells the others `call.left`; that user can't signal any more and isn't listed as a participant
-- `GET /rtc/ice-servers` (signed in) returns a STUN entry and a TURN entry with `urls` from `TURN_URLS`, `username` `<unix expiry>:<userId>` expiring within 24 hours, and `credential` = `base64(HMAC-SHA1(TURN_SECRET, username))`. The secret never appears in the response
+- `GET /rtc/ice-servers` (signed in) returns a STUN entry and a TURN entry with `urls` from `TURN_URLS`, `username` `<unix expiry>:<userId>` expiring within 24 hours, and `credential` = `base64(HMAC-SHA1(TURN_SECRET, username))`, plus `ttlSeconds` (how long the credentials stay valid). Without `TURN_SECRET` only the STUN entry is returned (`contracts/realtime.md` → ICE servers). The secret never appears in the response
 
 The check runs your server with `TURN_SECRET=bd-check-turn-secret` and `TURN_URLS=turn:turn.bd-check.test:3478,turns:turn.bd-check.test:5349`.
 

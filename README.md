@@ -7,7 +7,8 @@ backend and frontend tracks**.
 It ships with a small working part (sign-in, users, teams). **You build the rest
 during the tracks**, and some of what ships has deliberate flaws for you to find.
 Every milestone has a brief in [`betterdev/tasks/`](betterdev/tasks/), and hidden
-tests check your work when you run it.
+tests check your work when you run it. [What you're building](betterdev/tasks/README.md#what-youre-building)
+maps the briefs to the app's features — what each one adds for the people using it.
 
 ```
 frontend/         React 19 + Vite + TypeScript + Tailwind + TanStack Query

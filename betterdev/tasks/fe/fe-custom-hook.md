@@ -1,6 +1,8 @@
 # fe-custom-hook — Extract reusable hooks
 
-**Type:** Build · **Track:** frontend
+**Type:** Build · **Track:** frontend · **Feature:** People directory
+
+**What the app's users get:** Nothing visible — internal. Search and paging share one implementation, so they behave the same on every list.
 
 **Where:** `frontend/src/` — `src/hooks/`.
 

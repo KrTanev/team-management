@@ -12,15 +12,21 @@ info:
     - JSON everywhere, camelCase fields, integer ids, ISO-8601 UTC timestamps.
     - Auth: `Authorization: Bearer <token>` from `POST /auth/login`. Every route
       except `/health`, `/auth/login` and `/__test__/*` requires it (401 otherwise).
-    - Errors always use the `Error` envelope below.
+    - Errors always use the `Error` envelope below — including `404` for an unknown
+      route and `404` or `405` for a wrong method on an existing one (code
+      `not_found` for both).
     - List endpoints are paginated: `limit` (default 20, max 100) and `offset`
-      (default 0), response `{items, total, limit, offset}`. The activity feed is
-      the exception — it uses cursor pagination.
+      (default 0), response `{items, total, limit, offset}`. A `limit` or `offset`
+      outside its range → `422`. The activity feed is the exception — it uses
+      cursor pagination.
     - Roles: every user has a global `role` (`admin` | `member`). Teams have
       `lead` | `member`; projects have `admin` | `member`.
     - Visibility: a project (and its tasks, activity and numbers) is visible to its
       members and to global admins. For anyone else it does not exist — `404`, never
       `403`. `403` is for callers who can see the resource but may not change it.
+    - `X-Query-Count`: in test mode (`BD_TEST_MODE=1`) or with `BD_DEBUG_QUERIES=1`,
+      every response carries the number of SQL queries it ran. The starter ships
+      it; keep it working — the be-profile and be-caching checks read it.
     - Every response carries `X-Request-ID` (the incoming one when the client sent
       it, otherwise a generated one). Built in be-observability.
 
@@ -195,6 +201,7 @@ paths:
                       items:
                         type: array
                         items: { $ref: '#/components/schemas/User' }
+        '422': { $ref: '#/components/responses/ValidationError' }
     post:
       x-status: shipped
       summary: Create a user (global admin only)
@@ -268,6 +275,7 @@ paths:
                       items:
                         type: array
                         items: { $ref: '#/components/schemas/Team' }
+        '422': { $ref: '#/components/responses/ValidationError' }
     post:
       x-status: shipped
       summary: Create a team (global admin only)
@@ -471,6 +479,7 @@ paths:
                       items:
                         type: array
                         items: { $ref: '#/components/schemas/Project' }
+        '422': { $ref: '#/components/responses/ValidationError' }
     post:
       x-status: build
       summary: Create a project — the caller becomes its only member, with role `admin`
@@ -729,6 +738,7 @@ paths:
                       items:
                         type: array
                         items: { $ref: '#/components/schemas/Task' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /activity:
     get:
@@ -857,6 +867,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ExportJob' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /exports/{exportId}:
     parameters:

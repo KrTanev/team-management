@@ -1,6 +1,8 @@
 # be-jobs — Background CSV export
 
-**Type:** Build · **Track:** backend · **Needs:** be-api-design
+**Type:** Build · **Track:** backend · **Needs:** be-api-design · **Feature:** CSV export
+
+**What the app's users get:** Exporting a project with thousands of tasks to CSV doesn't time out: it runs in the background and you download the file when it's ready.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — new `/exports` routes.
 

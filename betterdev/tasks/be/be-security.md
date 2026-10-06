@@ -1,6 +1,8 @@
 # be-security — Close the authorization holes
 
-**Type:** Fix · **Track:** backend
+**Type:** Fix · **Track:** backend · **Feature:** Sign-in & sessions
+
+**What the app's users get:** Members can't create accounts or make themselves admins, signing out really signs you out on that device, and sessions expire after a day.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json` — auth and users routes.
 

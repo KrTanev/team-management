@@ -1,6 +1,8 @@
 # be-crud — Projects CRUD with members
 
-**Type:** Build · **Track:** backend
+**Type:** Build · **Track:** backend · **Feature:** Projects
+
+**What the app's users get:** People can create projects, add and remove project members, and only see the projects they're on.
 
 **Where:** `backend-python/` or `backend-node/` — whichever you set in `betterdev.json`. New tables and routes.
 

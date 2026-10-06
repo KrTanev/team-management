@@ -1,6 +1,8 @@
 # fe-routing — Project detail with nested routes
 
-**Type:** Build · **Track:** frontend · **Needs:** fe-component
+**Type:** Build · **Track:** frontend · **Needs:** fe-component · **Feature:** Projects
+
+**What the app's users get:** Each project has Overview, Tasks and Settings pages; task filters live in the link so you can share them; only admins reach Settings.
 
 **Where:** `frontend/src/` — `/projects/:id/*`.
 
