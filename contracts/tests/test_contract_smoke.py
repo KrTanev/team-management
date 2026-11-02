@@ -170,8 +170,10 @@ def test_project_crud_and_members(api,admin,bob):
 
     r = api.post(f"/projects/{project_id}/members", headers=admin, json={"userId": 2, "role": "member"})
     assert r.status_code == 201
-    assert r.json()["members"] == [{"userId": 2, "displayName": "Bobby", "role": "member"}]
-
+    assert r.json()["members"] == [
+    {"userId": 1, "displayName": "Alice Johnson", "role": "admin"},
+    {"userId": 2, "displayName": "Bobby", "role": "member"},
+]
     r = api.patch(f"/projects/{project_id}", headers=bob, json={"description": "Optimal desc project"})
     assert_error(api.patch("/projects/{project_id}" , headers=bob, json={"description": "Optimal desc project"}), 403, "forbidden")
 
