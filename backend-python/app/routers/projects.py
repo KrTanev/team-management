@@ -81,7 +81,6 @@ def _project_out(db: Session, project: Project) -> ProjectOut:
             .where(ProjectMember.project_id == project.id)
             .order_by(ProjectMember.user_id)
         )
-        .scalars()
         .all()
     )
     members = [
