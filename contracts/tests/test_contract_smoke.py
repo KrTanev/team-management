@@ -160,3 +160,23 @@ def test_team_crud_and_members(api, admin, bob):
 def test_query_count_header(api, bob):
     r = api.get("/users", headers=bob)
     assert int(r.headers["X-Query-Count"]) >= 1
+
+
+def test_project_crud_and_members(api,admin,bob):
+    r = api.post("/projects", headers=admin, json={"name": "Optimal project"})
+    assert r.status_code == 201, r.text
+    project_id = r.json()["id"]
+    assert_error(api.post("/projects" , headers=admin, json={"team_links":2}), 422, "validation_error")
+
+    r = api.post(f"/projects/{project_id}/members", headers=admin, json={"userId": 2, "role": "member"})
+    assert r.status_code == 201
+    assert r.json()["members"] == [
+    {"userId": 1, "displayName": "Alice Johnson", "role": "admin"},
+    {"userId": 2, "displayName": "Bobby", "role": "member"},
+]
+    r = api.patch(f"/projects/{project_id}", headers=bob, json={"description": "Optimal desc project"})
+    assert_error(api.patch(f"/projects/{project_id}" , headers=bob, json={"description": "Optimal desc project"}), 403, "forbidden")
+
+    assert api.delete(f"/projects/{project_id}/members/2", headers=admin).status_code == 204
+    assert api.delete(f"/projects/{project_id}", headers=admin).status_code == 204
+    
