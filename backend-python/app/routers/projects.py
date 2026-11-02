@@ -74,15 +74,12 @@ def _project_out(db: Session, project: Project) -> ProjectOut:
         .scalars()
         .all()
     )
-    memberships = (
-        db.execute(
-            select(ProjectMember.user_id, User.display_name, ProjectMember.role)
-            .join(User, User.id == ProjectMember.user_id)
-            .where(ProjectMember.project_id == project.id)
-            .order_by(ProjectMember.user_id)
-        )
-        .all()
-    )
+    memberships = db.execute(
+        select(ProjectMember.user_id, User.display_name, ProjectMember.role)
+        .join(User, User.id == ProjectMember.user_id)
+        .where(ProjectMember.project_id == project.id)
+        .order_by(ProjectMember.user_id)
+    ).all()
     members = [
         ProjectMemberOut(
             user_id=user_id,
