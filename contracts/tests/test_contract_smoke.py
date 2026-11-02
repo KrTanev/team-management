@@ -163,7 +163,7 @@ def test_query_count_header(api, bob):
 
 
 def test_project_crud_and_members(api,admin,bob):
-    r = api.post(f"/projects", headers=admin, json={"name": "Optimal project"})
+    r = api.post("/projects", headers=admin, json={"name": "Optimal project"})
     assert r.status_code == 201, r.text
     project_id = r.json()["id"]
     assert_error(api.post("/projects" , headers=admin, json={"team_links":2}), 422, "validation_error")
@@ -175,7 +175,7 @@ def test_project_crud_and_members(api,admin,bob):
     {"userId": 2, "displayName": "Bobby", "role": "member"},
 ]
     r = api.patch(f"/projects/{project_id}", headers=bob, json={"description": "Optimal desc project"})
-    assert_error(api.patch("/projects/{project_id}" , headers=bob, json={"description": "Optimal desc project"}), 403, "forbidden")
+    assert_error(api.patch(f"/projects/{project_id}" , headers=bob, json={"description": "Optimal desc project"}), 403, "forbidden")
 
     assert api.delete(f"/projects/{project_id}/members/2", headers=admin).status_code == 204
     assert api.delete(f"/projects/{project_id}", headers=admin).status_code == 204
