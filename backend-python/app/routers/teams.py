@@ -1,20 +1,19 @@
 from fastapi import APIRouter, Depends, Query, Response
-from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.auth import current_user, require_admin
 from app.db import get_db
-from app.errors import ApiError, _return_error
+from app.errors import _return_error
 from app.models import Team, TeamMember, User
 from app.schemas import Page, TeamCreate, TeamMemberIn, TeamMemberOut, TeamOut, TeamUpdate
 
 router = APIRouter(prefix="/teams", tags=["teams"])
 
 
-
 def _not_found():
     _return_error(404, "Team not found")
+
 
 def _team_name_exists(db: Session, name: str, exclude_team_id: int | None = None) -> bool:
     query = select(Team.id).where(func.lower(Team.name) == name.lower())
@@ -77,8 +76,8 @@ def create_team(body: TeamCreate, me: User = Depends(current_user), db: Session 
     require_admin(me)
 
     if _team_name_exists(db, body.name):
-        _return_error(409, "A team with this name already exists", details={"field": "name"} )
-        
+        _return_error(409, "A team with this name already exists", details={"field": "name"})
+
     team = Team(name=body.name, description=body.description)
     db.add(team)
     db.commit()
@@ -105,14 +104,14 @@ def update_team(
         return _not_found()
     if not _can_manage(db, me, team_id):
         _return_error(409, "Only admins and the team lead can edit this team")
-        
+
     changes = body.model_dump(exclude_unset=True)
     if not changes:
         _return_error(422, "Nothing to update")
 
     if "name" in changes and changes["name"] != team.name:
         if _team_name_exists(db, body.name):
-            _return_error(409, "A team with that name already exists", details={"field":"name"})
+            _return_error(409, "A team with that name already exists", details={"field": "name"})
 
     for field, value in changes.items():
         setattr(team, field, value)
@@ -131,7 +130,6 @@ def delete_team(team_id: int, me: User = Depends(current_user), db: Session = De
     _return_error(204)
 
 
-
 @router.post("/{team_id}/members", response_model=TeamOut, status_code=201)
 def add_member(
     team_id: int,
@@ -146,10 +144,16 @@ def add_member(
         _return_error(403, "Only admins and the team lead can add members")
 
     if db.get(User, body.user_id) is None:
-        _return_error(404, "User not found", details={"field":"user_id", "value":"not_found_user_id"})
-        
+        _return_error(
+            404, "User not found", details={"field": "user_id", "value": "not_found_user_id"}
+        )
+
     if team.memberships.__contains__(body.user_id):
-        _return_error(409, "User already in team", details={"field": "user_id", "value": "user_id_already_in_team"})
+        _return_error(
+            409,
+            "User already in team",
+            details={"field": "user_id", "value": "user_id_already_in_team"},
+        )
 
     db.add(TeamMember(team_id=team_id, user_id=body.user_id, role=body.role))
     db.commit()
