@@ -32,7 +32,7 @@ def error_body(code: str, message: str, details=None) -> dict:
     return {"error": body}
 
 
-def _return_error(status_code: int, message: str, details=None):
+def _return_response(status_code: int, message: str, details=None):
 
     error = {"code": status_code, "message": message}
 
