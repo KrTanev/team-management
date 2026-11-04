@@ -5,11 +5,24 @@ from sqlalchemy.orm import Session
 
 from app.auth import current_user, require_admin
 from app.db import get_db
-from app.errors import ApiError
+from app.errors import ApiError, _return_error
 from app.models import Team, TeamMember, User
 from app.schemas import Page, TeamCreate, TeamMemberIn, TeamMemberOut, TeamOut, TeamUpdate
 
 router = APIRouter(prefix="/teams", tags=["teams"])
+
+
+
+def _not_found():
+    _return_error(404, "Team not found")
+
+def _team_name_exists(db: Session, name: str, exclude_team_id: int | None = None) -> bool:
+    query = select(Team.id).where(func.lower(Team.name) == name.lower())
+
+    if exclude_team_id is not None:
+        query = query.where(Team.id != exclude_team_id)
+
+    return db.execute(query).first() is not None
 
 
 def _team_out(db: Session, team: Team) -> TeamOut:
@@ -32,10 +45,6 @@ def _team_out(db: Session, team: Team) -> TeamOut:
         created_at=team.created_at,
         updated_at=team.updated_at,
     )
-
-
-def _not_found():
-    return JSONResponse({"message": "Team not found"}, status_code=404)
 
 
 def _can_manage(db: Session, me: User, team_id: int) -> bool:
@@ -66,8 +75,10 @@ def list_teams(
 @router.post("", response_model=TeamOut, status_code=201)
 def create_team(body: TeamCreate, me: User = Depends(current_user), db: Session = Depends(get_db)):
     require_admin(me)
-    if db.execute(select(Team.id).where(Team.name == body.name)).first():
-        raise ApiError(409, "A team with that name already exists")
+
+    if _team_name_exists(db, body.name):
+        _return_error(409, "A team with this name already exists", details={"field": "name"} )
+        
     team = Team(name=body.name, description=body.description)
     db.add(team)
     db.commit()
@@ -93,13 +104,16 @@ def update_team(
     if team is None:
         return _not_found()
     if not _can_manage(db, me, team_id):
-        raise ApiError(403, "Only admins and the team lead can edit this team")
+        _return_error(409, "Only admins and the team lead can edit this team")
+        
     changes = body.model_dump(exclude_unset=True)
     if not changes:
-        raise ApiError(422, "Nothing to update")
+        _return_error(422, "Nothing to update")
+
     if "name" in changes and changes["name"] != team.name:
-        if db.execute(select(Team.id).where(Team.name == changes["name"])).first():
-            raise ApiError(409, "A team with that name already exists")
+        if _team_name_exists(db, body.name):
+            _return_error(409, "A team with that name already exists", details={"field":"name"})
+
     for field, value in changes.items():
         setattr(team, field, value)
     db.commit()
@@ -114,7 +128,8 @@ def delete_team(team_id: int, me: User = Depends(current_user), db: Session = De
         return _not_found()
     db.delete(team)
     db.commit()
-    return Response(status_code=204)
+    _return_error(204)
+
 
 
 @router.post("/{team_id}/members", response_model=TeamOut, status_code=201)
@@ -128,9 +143,14 @@ def add_member(
     if team is None:
         return _not_found()
     if not _can_manage(db, me, team_id):
-        raise ApiError(403, "Only admins and the team lead can add members")
+        _return_error(403, "Only admins and the team lead can add members")
+
     if db.get(User, body.user_id) is None:
-        raise ApiError(404, "User not found")
+        _return_error(404, "User not found", details={"field":"user_id", "value":"not_found_user_id"})
+        
+    if team.memberships.__contains__(body.user_id):
+        _return_error(409, "User already in team", details={"field": "user_id", "value": "user_id_already_in_team"})
+
     db.add(TeamMember(team_id=team_id, user_id=body.user_id, role=body.role))
     db.commit()
     return _team_out(db, team)
@@ -146,12 +166,14 @@ def remove_member(
     if db.get(Team, team_id) is None:
         return _not_found()
     if not _can_manage(db, me, team_id):
-        raise ApiError(403, "Only admins and the team lead can remove members")
+        _return_error(403, "Only admins and the team lead can remove members")
+
     membership = db.execute(
         select(TeamMember).where(TeamMember.team_id == team_id, TeamMember.user_id == user_id)
     ).scalar_one_or_none()
     if membership is None:
-        raise ApiError(404, "Not a member of this team")
+        _return_error(404, "Not a member of this team")
+
     db.delete(membership)
     db.commit()
     return Response(status_code=204)
